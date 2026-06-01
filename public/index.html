@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlmauPsych — Психологическая помощь AlmaU</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="nav-logo" href="/">AlmauPsych<span style="color:var(--red)">.</span></a>
+  <div class="nav-links">
+    <a href="#how">Как это работает</a>
+    <a href="#how">О центре</a>
+    <a href="/login.html">Войти</a>
+    <a href="/register.html" class="btn-nav">Начать →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="hero-badge"><span style="background:#e57373"></span> Almaty Management University · с 1988 года</div>
+      <h1>Психологическая<br>помощь студентам <em>AlmaU</em></h1>
+      <p>Запись к психологу университета — онлайн, бесплатно, конфиденциально. Только для студентов и сотрудников AlmaU.</p>
+      <div class="hero-actions">
+        <a href="/register.html" class="btn btn-light">Записаться к психологу</a>
+        <a href="#how" class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.5)">Как это работает</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card">
+        <div class="hero-card-header">
+          <div class="avatar" style="background:rgba(255,255,255,0.2);color:white;font-size:1.5rem">🧠</div>
+          <div>
+            <div class="hero-card-name">Психологический центр AlmaU</div>
+            <div class="hero-card-tag">Квалифицированная помощь · Бесплатно</div>
+          </div>
+        </div>
+        <div class="hero-card-msg">«Здравствуйте! Мы готовы помочь вам. Запишитесь на удобное время — специалист встретит вас в назначенный день.»</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="num">2</div>
+          <div class="label">психолога</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">5 дней</div>
+          <div class="label">в неделю</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">100%</div>
+          <div class="label">конфиденциально</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section how-bg" id="how">
+  <div class="section-inner">
+    <div class="section-header centered">
+      <div class="section-label">Просто и понятно</div>
+      <h2 class="section-title">Как получить помощь</h2>
+      <p class="section-sub">Три простых шага, чтобы начать работу с психологом</p>
+    </div>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Зарегистрируйтесь</h3>
+        <p>Создайте аккаунт с вашей почтой @almau.edu.kz — только для студентов и сотрудников университета.</p>
+        <div class="step-connector">→</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>Выберите психолога</h3>
+        <p>Ознакомьтесь с профилями специалистов и выберите удобное время для встречи.</p>
+        <div class="step-connector">→</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Общайтесь</h3>
+        <p>После подтверждения записи откроется чат — общайтесь в удобное время, всё конфиденциально.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section" id="psychologists">
+  <div class="section-inner">
+    <div class="section-header centered">
+      <div class="section-label">О центре</div>
+      <h2 class="section-title">Психологическая служба AlmaU</h2>
+      <p class="section-sub">Профессиональная поддержка для каждого студента и сотрудника университета</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem" id="psych-grid">
+      <div class="loader"><div class="spinner"></div>Загрузка...</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Начните путь к себе сегодня</h2>
+  <p>Записаться к психологу AlmaU — быстро и бесплатно</p>
+  <a href="/register.html" class="btn btn-light" style="font-size:1.1rem">Зарегистрироваться с @almau.edu.kz →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">AlmauPsych<span style="color:var(--green-light)">.</span></div>
+  <p>Almaty Management University · Психологический центр · 2024</p>
+</footer>
+
+<script src="/js/api.js"></script>
+<script>
+  // Redirect if already logged in
+  if (API.isLoggedIn()) {
+    const user = API.getUser();
+    window.location.href = user?.role === 'psychologist' ? '/psych.html' : '/dashboard.html';
+  }
+
+  // About cards
+  const aboutCards = [
+    { icon: '🔒', title: 'Конфиденциальность', text: 'Все беседы строго конфиденциальны. Информация не передаётся третьим лицам, деканату или родителям без вашего согласия.' },
+    { icon: '🎓', title: 'Только для AlmaU', text: 'Сервис доступен только студентам и сотрудникам университета — войти можно только с корпоративной почтой @almau.edu.kz.' },
+    { icon: '💬', title: 'Чат после записи', text: 'После подтверждения записи открывается защищённый чат с психологом — можно задать вопросы заранее.' }
+  ];
+  document.getElementById('psych-grid').innerHTML = aboutCards.map(c => `
+    <div class="step-card" style="text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:1rem">${c.icon}</div>
+      <h3>${c.title}</h3>
+      <p>${c.text}</p>
+    </div>
+  `).join('');
+</script>
+</body>
+</html>

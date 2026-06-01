@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Профиль — AlmauPsych</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><a href="/dashboard.html">AlmauPsych<span style="color:#e57373">.</span></a></div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard.html"><span class="icon">🏠</span> Главная</a>
+      <a href="/booking.html"><span class="icon">📅</span> Записаться</a>
+      <a href="/chat.html"><span class="icon">💬</span> Чат</a>
+      <a href="/profile.html" class="active"><span class="icon">👤</span> Профиль</a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-user-info">
+        <div class="sidebar-avatar" id="sb-avatar">?</div>
+        <div>
+          <div class="sidebar-user-name" id="sb-name">...</div>
+          <div class="sidebar-user-role">Студент</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="main-header">
+      <div class="page-title">Мой профиль</div>
+      <button onclick="logout()" class="btn btn-outline btn-sm">Выйти</button>
+    </div>
+    <div class="main-body">
+
+      <div class="profile-header">
+        <div class="profile-avatar-big" id="profile-avatar">?</div>
+        <div class="profile-header-info">
+          <h2 id="profile-name">Загрузка...</h2>
+          <p id="profile-email">...</p>
+          <p style="margin-top:0.5rem;opacity:0.7;font-size:0.9rem" id="profile-since"></p>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Информация об аккаунте</div></div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:1.25rem">
+              <div>
+                <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.35rem">Имя</div>
+                <div style="font-weight:600" id="info-name">—</div>
+              </div>
+              <div>
+                <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.35rem">Email</div>
+                <div style="font-weight:600" id="info-email">—</div>
+              </div>
+              <div>
+                <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.35rem">Роль</div>
+                <div style="font-weight:600">Студент AlmaU</div>
+              </div>
+              <div>
+                <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.35rem">Зарегистрирован</div>
+                <div style="font-weight:600" id="info-since">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Статистика</div></div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+              <div style="text-align:center;padding:1.5rem;background:var(--gray-50);border-radius:var(--radius-sm)">
+                <div style="font-size:2rem;font-weight:800;color:var(--blue-dark)" id="stat-appts">—</div>
+                <div style="font-size:0.85rem;color:var(--text-muted);margin-top:0.25rem">Всего записей</div>
+              </div>
+              <div style="text-align:center;padding:1.5rem;background:var(--gray-50);border-radius:var(--radius-sm)">
+                <div style="font-size:2rem;font-weight:800;color:var(--blue-dark)" id="stat-sessions">—</div>
+                <div style="font-size:0.85rem;color:var(--text-muted);margin-top:0.25rem">Сессий</div>
+              </div>
+            </div>
+            <div style="margin-top:1.5rem;padding:1.25rem;background:var(--blue-pale);border-radius:var(--radius-sm)">
+              <div style="font-size:0.9rem;color:var(--blue-dark);font-weight:600;margin-bottom:0.35rem">🔒 Конфиденциальность</div>
+              <div style="font-size:0.85rem;color:var(--blue-mid)">Все ваши данные и переписка защищены и не передаются третьим лицам.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem;text-align:right">
+        <button onclick="logout()" class="btn btn-danger btn-sm">Выйти из аккаунта</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/mobile.js"></script>
+<script>
+  if (!API.requireAuth('student')) {}
+  function logout() { API.clearAuth(); window.location.href = '/'; }
+
+  async function loadProfile() {
+    const user = await API.get('/api/me');
+    document.getElementById('sb-name').textContent = user.name;
+    document.getElementById('sb-avatar').textContent = getInitials(user.name);
+    document.getElementById('profile-avatar').textContent = getInitials(user.name);
+    document.getElementById('profile-name').textContent = user.name;
+    document.getElementById('profile-email').textContent = user.email;
+    document.getElementById('info-name').textContent = user.name;
+    document.getElementById('info-email').textContent = user.email;
+    const since = new Date(user.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('info-since').textContent = since;
+    document.getElementById('profile-since').textContent = 'Участник с ' + since;
+
+    const appts = await API.get('/api/appointments');
+    document.getElementById('stat-appts').textContent = appts.length;
+    document.getElementById('stat-sessions').textContent = appts.filter(a => a.status === 'confirmed' || a.status === 'completed').length;
+  }
+
+  loadProfile();
+</script>
+</body>
+</html>

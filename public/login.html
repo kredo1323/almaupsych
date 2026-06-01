@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход — AlmauPsych</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-left">
+    <div class="auth-left-content">
+      <h2>Рады видеть<br>вас снова</h2>
+      <p>Войдите, чтобы записаться к психологу или продолжить общение</p>
+      <div class="auth-features">
+        <div class="auth-feature">
+          <div class="auth-feature-icon">🛡️</div>
+          <div class="auth-feature-text">Ваши данные надёжно защищены</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">💬</div>
+          <div class="auth-feature-text">Чат с психологом доступен 24/7</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">📋</div>
+          <div class="auth-feature-text">История записей и сообщений</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-container">
+      <div class="auth-logo">AlmauPsych<span class="dot">.</span></div>
+      <h1>Вход в систему</h1>
+      <p class="subtitle">Используйте почту @almau.edu.kz</p>
+
+      <div class="error-msg" id="error-msg"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="email" placeholder="250111@almau.edu.kz" required>
+        </div>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" id="password" placeholder="Ваш пароль" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center" id="submit-btn">
+          Войти →
+        </button>
+      </form>
+
+      <div class="divider"><span>или</span></div>
+      <div style="text-align:center;color:var(--text-muted);font-size:0.9rem;background:var(--gray-50);padding:1rem;border-radius:var(--radius-sm)">
+        <strong>Аккаунт психолога / администратора:</strong><br>
+        psych@almau.edu.kz · psych2024
+      </div>
+
+      <div class="form-footer">
+        Нет аккаунта? <a href="/register.html">Зарегистрироваться</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  if (API.isLoggedIn()) {
+    const u = API.getUser();
+    window.location.href = u?.role === 'psychologist' ? '/psych.html' : '/dashboard.html';
+  }
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const errEl = document.getElementById('error-msg');
+    const btn = document.getElementById('submit-btn');
+
+    errEl.className = 'error-msg';
+    btn.textContent = 'Вхожу...'; btn.disabled = true;
+    try {
+      const data = await API.post('/api/login', { email, password });
+      API.setAuth(data.token, data.user);
+      window.location.href = data.user.role === 'psychologist' ? '/psych.html' : '/dashboard.html';
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.className = 'error-msg show';
+      btn.textContent = 'Войти →'; btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

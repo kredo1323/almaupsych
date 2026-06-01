@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Главная — AlmauPsych</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .next-appt-card {
+      background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid));
+      border-radius: var(--radius); padding: 1.75rem 2rem; color: white;
+      margin-bottom: 1.5rem; display: flex; align-items: center; gap: 2rem;
+    }
+    .next-appt-date { text-align: center; background: rgba(255,255,255,.15); border-radius: 12px; padding: 1rem 1.25rem; min-width: 72px; }
+    .next-appt-date .day { font-size: 2.25rem; font-weight: 800; line-height: 1; }
+    .next-appt-date .month { font-size: .78rem; opacity: .8; text-transform: uppercase; letter-spacing: .05em; margin-top: .2rem; }
+    .next-appt-info { flex: 1; }
+    .next-appt-info h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: .35rem; }
+    .next-appt-info p { opacity: .8; font-size: .95rem; }
+    .appt-card-new {
+      background: white; border: 1.5px solid var(--gray-200); border-radius: var(--radius);
+      padding: 1.25rem 1.5rem; margin-bottom: .75rem;
+      display: flex; align-items: center; gap: 1.25rem;
+      transition: all .2s;
+    }
+    .appt-card-new:hover { border-color: var(--blue-light); box-shadow: var(--shadow); }
+    .appt-card-new .left-bar { width: 4px; border-radius: 4px; align-self: stretch; flex-shrink: 0; }
+    .section-sep { font-size: .78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin: 1.5rem 0 .75rem; }
+    /* mobile hamburger */
+    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: .5rem; }
+    .hamburger span { display: block; width: 22px; height: 2px; background: var(--text); margin: 5px 0; border-radius: 2px; transition: .3s; }
+    @media (max-width: 768px) {
+      .hamburger { display: block; }
+      .sidebar { transform: translateX(-100%); transition: transform .3s; }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0 !important; }
+      .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 49; }
+      .sidebar-overlay.open { display: block; }
+    }
+  </style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><a href="/dashboard.html">AlmauPsych<span style="color:#e57373">.</span></a></div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard.html" class="active"><span class="icon">🏠</span> Главная</a>
+      <a href="/booking.html"><span class="icon">📅</span> Записаться</a>
+      <a href="/chat.html"><span class="icon">💬</span> Чат <span id="chat-badge" style="display:none;background:#e57373;color:white;border-radius:50px;padding:.1rem .45rem;font-size:.7rem;font-weight:700;margin-left:.25rem"></span></a>
+      <a href="/profile.html"><span class="icon">👤</span> Профиль</a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-user-info">
+        <div class="sidebar-avatar" id="sb-avatar">?</div>
+        <div>
+          <div class="sidebar-user-name" id="sb-name">...</div>
+          <div class="sidebar-user-role" style="color:rgba(255,255,255,.5)">Студент AlmaU</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="main-header">
+      <div style="display:flex;align-items:center;gap:1rem">
+        <button class="hamburger" onclick="openSidebar()"><span></span><span></span><span></span></button>
+        <div class="page-title" id="greeting">Добро пожаловать 👋</div>
+      </div>
+      <div class="header-actions">
+        <a href="/booking.html" class="btn btn-primary btn-sm">+ Записаться</a>
+        <button onclick="logout()" class="btn btn-outline btn-sm">Выйти</button>
+      </div>
+    </div>
+    <div class="main-body">
+
+      <!-- Next appointment highlight -->
+      <div id="next-appt-wrap"></div>
+
+      <!-- Stats -->
+      <div class="stats-grid" style="margin-bottom:1.5rem">
+        <div class="stat-box"><div class="stat-icon">📅</div><div class="stat-num" id="st-total">—</div><div class="stat-label">Всего записей</div></div>
+        <div class="stat-box"><div class="stat-icon">⏳</div><div class="stat-num" id="st-pending">—</div><div class="stat-label">Ожидает</div></div>
+        <div class="stat-box"><div class="stat-icon">✅</div><div class="stat-num" id="st-confirmed">—</div><div class="stat-label">Подтверждено</div></div>
+        <div class="stat-box"><div class="stat-icon">🎯</div><div class="stat-num" id="st-done">—</div><div class="stat-label">Завершено</div></div>
+      </div>
+
+      <!-- Appointments -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Мои записи</div>
+          <a href="/booking.html" class="btn btn-outline btn-sm">+ Новая запись</a>
+        </div>
+        <div class="card-body" id="appt-list">
+          <div class="loader"><div class="spinner"></div>Загрузка...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/mobile.js"></script>
+<script>
+if (!API.requireAuth('student')) {}
+
+const user = API.getUser();
+if (user) {
+  document.getElementById('sb-name').textContent = user.name;
+  document.getElementById('sb-avatar').textContent = getInitials(user.name);
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Доброе утро' : hour < 17 ? 'Добрый день' : 'Добрый вечер';
+  document.getElementById('greeting').textContent = `${greeting}, ${user.name.split(' ')[0]} 👋`;
+}
+
+function logout() { API.clearAuth(); window.location.href = '/'; }
+function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+
+// Real-time updates
+const socket = io({ auth: { token: API.getToken() } });
+socket.on('slots_updated', () => loadDashboard());
+
+async function loadDashboard() {
+  try {
+    const appts = await API.get('/api/appointments');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+    // Stats
+    document.getElementById('st-total').textContent = appts.length;
+    document.getElementById('st-pending').textContent = appts.filter(a=>a.status==='pending').length;
+    document.getElementById('st-confirmed').textContent = appts.filter(a=>a.status==='confirmed').length;
+    document.getElementById('st-done').textContent = appts.filter(a=>a.status==='completed').length;
+
+    // Chat badge — show if confirmed appointment exists
+    const hasChat = appts.some(a=>a.status==='confirmed');
+    const badge = document.getElementById('chat-badge');
+    if (hasChat) { badge.style.display='inline'; badge.textContent='●'; }
+
+    // Upcoming appointments
+    const upcoming = appts
+      .filter(a => a.status==='confirmed' || a.status==='pending')
+      .filter(a => a.date >= todayStr)
+      .sort((a,b) => a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+    const past = appts
+      .filter(a => a.date < todayStr || a.status==='completed' || a.status==='cancelled')
+      .sort((a,b) => b.date.localeCompare(a.date));
+
+    // Next appointment card
+    const nextWrap = document.getElementById('next-appt-wrap');
+    if (upcoming.length) {
+      const next = upcoming[0];
+      const d = formatDate(next.date);
+      nextWrap.innerHTML = `
+        <div class="next-appt-card">
+          <div class="next-appt-date"><div class="day">${d.day}</div><div class="month">${d.month}</div></div>
+          <div class="next-appt-info">
+            <h3>${next.status==='confirmed'?'Ближайшая сессия':'Запись ожидает подтверждения'}</h3>
+            <p>🕐 ${next.time} · Психологический центр AlmaU</p>
+            ${next.note?`<p style="margin-top:.35rem;opacity:.7;font-size:.85rem">📝 ${next.note}</p>`:''}
+          </div>
+          ${next.status==='confirmed'?`<a href="/chat.html" class="btn btn-light btn-sm">💬 Написать</a>`:''}
+        </div>`;
+    } else { nextWrap.innerHTML=''; }
+
+    // Render list
+    const el = document.getElementById('appt-list');
+    if (!appts.length) {
+      el.innerHTML = `
+        <div style="text-align:center;padding:3rem 1rem">
+          <div style="font-size:3rem;margin-bottom:1rem">👋</div>
+          <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:.5rem">Добро пожаловать в AlmauPsych</h3>
+          <p style="color:var(--text-muted);margin-bottom:1.5rem;max-width:360px;margin-left:auto;margin-right:auto">Запишитесь к психологу — это бесплатно и конфиденциально. Первый шаг — выбрать удобное время.</p>
+          <a href="/booking.html" class="btn btn-primary">📅 Записаться к психологу</a>
+        </div>`;
+      return;
+    }
+
+    let html = '';
+
+    if (upcoming.length) {
+      html += `<div class="section-sep">Предстоящие</div>`;
+      html += upcoming.map(a => renderCard(a)).join('');
+    }
+    if (past.length) {
+      html += `<div class="section-sep">История</div>`;
+      html += past.map(a => renderCard(a)).join('');
+    }
+    el.innerHTML = html;
+  } catch(e) {
+    document.getElementById('appt-list').innerHTML = '<div class="empty-state"><p>Ошибка загрузки</p></div>';
+  }
+}
+
+function renderCard(a) {
+  const d = formatDate(a.date);
+  const colors = {
+    pending:   '#f97316',
+    confirmed: '#22c55e',
+    cancelled: '#f43f5e',
+    completed: '#8b5cf6'
+  };
+  const color = colors[a.status] || '#94a3b8';
+  return `
+    <div class="appt-card-new">
+      <div class="left-bar" style="background:${color}"></div>
+      <div class="appt-date-box" style="flex-shrink:0;background:var(--gray-50);border-radius:10px;min-width:56px">
+        <div class="day">${d.day}</div><div class="month">${d.month}</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:.95rem;margin-bottom:.2rem">${a.psych_name}</div>
+        <div style="color:var(--text-muted);font-size:.85rem">🕐 ${a.time}</div>
+        ${a.note?`<div style="color:var(--text-muted);font-size:.8rem;margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📝 ${a.note}</div>`:''}
+      </div>
+      <span class="status-badge status-${a.status}">${statusLabel(a.status)}</span>
+      <div style="display:flex;gap:.5rem;flex-shrink:0">
+        ${a.status==='confirmed'?`<a href="/chat.html" class="btn btn-success btn-sm">💬 Чат</a>`:''}
+        ${a.status==='pending'?`<button onclick="cancelAppt(${a.id})" class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#fecaca">Отменить</button>`:''}
+      </div>
+    </div>`;
+}
+
+async function cancelAppt(id) {
+  if (!confirm('Отменить запись?')) return;
+  await API.patch(`/api/appointments/${id}`, { status: 'cancelled' });
+  showToast('Запись отменена');
+  loadDashboard();
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

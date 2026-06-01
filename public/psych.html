@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кабинет психолога — AlmauPsych</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .tabs{display:flex;border-bottom:2px solid var(--gray-200);margin-bottom:2rem}
+    .tab-btn{padding:.875rem 1.5rem;border:none;background:none;cursor:pointer;font-size:.95rem;font-weight:600;color:var(--text-muted);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s}
+    .tab-btn:hover{color:var(--blue-dark)}
+    .tab-btn.active{color:var(--blue-dark);border-bottom-color:var(--blue-dark)}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    /* ── DATE SCHEDULE GRID ── */
+    .sched-outer{overflow-x:auto;border-radius:var(--radius);border:1.5px solid var(--gray-200)}
+    .sched-table{border-collapse:collapse;width:100%;min-width:900px}
+    .sched-table th{
+      background:var(--blue-dark);color:white;
+      padding:.5rem .35rem;font-size:.78rem;font-weight:700;text-align:center;
+      position:sticky;top:0;z-index:3;white-space:nowrap;
+    }
+    .sched-table th:first-child{text-align:left;padding-left:.75rem;min-width:72px;font-size:.8rem}
+    .sched-table td{border:1px solid var(--gray-200);padding:.25rem;text-align:center;background:white}
+    .sched-table td:first-child{background:var(--gray-50);font-size:.8rem;font-weight:700;color:var(--text-muted);text-align:left;padding-left:.75rem;white-space:nowrap;position:sticky;left:0;z-index:1}
+    .sched-table tr:hover td{background:#fafbff}
+    .sched-table tr:hover td:first-child{background:var(--gray-100)}
+
+    .slot-btn{
+      width:100%;min-height:32px;border:none;border-radius:6px;cursor:pointer;
+      font-size:.72rem;font-weight:700;transition:all .15s;
+      display:flex;align-items:center;justify-content:center;gap:.2rem;
+    }
+    .slot-btn.open{background:#dbeafe;color:#1e40af}
+    .slot-btn.open:hover{background:#1e40af;color:white}
+    .slot-btn.closed{background:var(--gray-100);color:var(--gray-400)}
+    .slot-btn.closed:hover{background:#dbeafe;color:#1e40af}
+    .slot-btn.booked{background:#fee2e2;color:#b91c1c;cursor:default}
+    .slot-btn.past{background:transparent;color:var(--gray-200);cursor:default;font-size:.65rem}
+    .slot-btn.today-open{background:#dcfce7;color:#15803d}
+    .slot-btn.today-open:hover{background:#15803d;color:white}
+
+    /* day header */
+    .day-head{display:flex;flex-direction:column;align-items:center;gap:.2rem;padding:.35rem 0}
+    .day-head .dname{font-size:.72rem;font-weight:600;opacity:.7;text-transform:uppercase;letter-spacing:.04em}
+    .day-head .dnum{font-size:1.1rem;font-weight:800;line-height:1}
+    .day-head .dmonth{font-size:.65rem;opacity:.65}
+    .day-head.is-today .dnum{background:#f87171;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center}
+    .day-mini-btns{display:flex;gap:.2rem;margin-top:.2rem;flex-wrap:wrap;justify-content:center}
+    .day-mini-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;border-radius:4px;padding:.12rem .4rem;font-size:.6rem;cursor:pointer;font-weight:600;white-space:nowrap}
+    .day-mini-btn:hover{background:rgba(255,255,255,.3)}
+
+    /* legend */
+    .legend{display:flex;gap:1.25rem;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center}
+    .legend-item{display:flex;align-items:center;gap:.4rem;font-size:.82rem;color:var(--text-muted)}
+    .legend-dot{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+
+    /* week nav */
+    .week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+    .week-nav-label{font-weight:700;font-size:.95rem;color:var(--text)}
+    .week-nav-btn{background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);padding:.45rem .9rem;cursor:pointer;font-size:.9rem;color:var(--blue-dark);font-weight:600;transition:all .2s}
+    .week-nav-btn:hover{background:var(--blue-pale);border-color:var(--blue-light)}
+    .week-nav-btn:disabled{opacity:.35;cursor:not-allowed}
+
+    /* templates */
+    .tpl-bar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;padding:1rem 1.25rem;background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:var(--radius);margin-bottom:1.25rem}
+    .tpl-bar .tpl-label{font-size:.82rem;font-weight:700;color:var(--text-muted)}
+    .tpl-btn{background:white;border:1.5px solid var(--gray-200);border-radius:50px;padding:.35rem .9rem;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;color:var(--text)}
+    .tpl-btn:hover{border-color:var(--blue-light);color:var(--blue-dark);background:var(--blue-pale)}
+
+    /* appt action buttons hover */
+    .appt-act-btn:hover { filter: brightness(0.92); transform: translateY(-1px); }
+    .mini-input{border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);padding:.45rem .75rem;font-size:.875rem;font-family:var(--font);outline:none}
+    .mini-input:focus{border-color:var(--blue-light)}
+
+    /* override list */
+    .ov-row{display:flex;align-items:center;gap:1rem;padding:.875rem 1rem;border-bottom:1px solid var(--gray-100)}
+    .ov-row:last-child{border-bottom:none}
+
+    /* modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s}
+    .modal-overlay.open{opacity:1;pointer-events:all}
+    .modal{background:white;border-radius:var(--radius);padding:2rem;width:90%;max-width:480px;transform:translateY(20px);transition:transform .2s}
+    .modal-overlay.open .modal{transform:translateY(0)}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+    .modal-title{font-size:1.2rem;font-weight:700}
+    .modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--gray-400)}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><a href="/psych.html">AlmauPsych<span style="color:#e57373">.</span></a></div>
+    <nav class="sidebar-nav">
+      <a href="/psych.html" class="active"><span class="icon">📋</span> Кабинет</a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-user-info">
+        <div class="sidebar-avatar" id="sb-avatar">П</div>
+        <div>
+          <div class="sidebar-user-name" id="sb-name">Психолог</div>
+          <div class="sidebar-user-role" style="color:#e57373;font-size:.78rem">AlmaU</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="main-header">
+      <div class="page-title">Кабинет психолога</div>
+      <button onclick="logout()" class="btn btn-outline btn-sm">Выйти</button>
+    </div>
+    <div class="main-body">
+
+      <!-- STATS -->
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:2rem">
+        <div class="stat-box"><div class="stat-icon">⏳</div><div class="stat-num" id="st-pending">—</div><div class="stat-label">Ожидают</div></div>
+        <div class="stat-box"><div class="stat-icon">✅</div><div class="stat-num" id="st-confirmed">—</div><div class="stat-label">Подтверждено</div></div>
+        <div class="stat-box"><div class="stat-icon">📅</div><div class="stat-num" id="st-today">—</div><div class="stat-label">Сегодня</div></div>
+        <div class="stat-box"><div class="stat-icon">💬</div><div class="stat-num" id="st-chats">—</div><div class="stat-label">Активных чатов</div></div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('appointments',this)">📋 Записи <span id="pending-badge" style="display:none;background:#f97316;color:white;border-radius:50px;padding:.1rem .5rem;font-size:.72rem;font-weight:700;margin-left:.35rem"></span></button>
+        <button class="tab-btn" onclick="switchTab('schedule',this)">🗓 Расписание</button>
+        <button class="tab-btn" onclick="switchTab('chat',this)">💬 Чаты</button>
+      </div>
+
+      <!-- ══ TAB: APPOINTMENTS ══ -->
+      <div class="tab-panel active" id="tab-appointments">
+        <div style="display:flex;gap:1rem;margin-bottom:1.5rem;align-items:center;flex-wrap:wrap">
+          <select id="filter-status" onchange="renderAppts()" style="border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);padding:.5rem 1rem;font-size:.9rem;outline:none;font-family:var(--font)">
+            <option value="">Все записи</option>
+            <option value="pending">Ожидают</option>
+            <option value="confirmed">Подтверждено</option>
+            <option value="cancelled">Отменено</option>
+            <option value="completed">Завершено</option>
+          </select>
+          <input type="date" id="filter-date" onchange="renderAppts()" class="mini-input">
+          <button onclick="clearFilters()" class="btn btn-outline btn-sm">Сбросить</button>
+        </div>
+        <div id="appt-list"></div>
+      </div>
+
+      <!-- ══ TAB: SCHEDULE ══ -->
+      <div class="tab-panel" id="tab-schedule">
+
+        <!-- Templates bar -->
+        <div class="tpl-bar">
+          <span class="tpl-label">Заполнить неделю:</span>
+          <button class="tpl-btn" onclick="fillWeek('full')">📅 Все слоты</button>
+          <button class="tpl-btn" onclick="fillWeek('morning')">🌅 Только утро</button>
+          <button class="tpl-btn" onclick="fillWeek('afternoon')">🌇 Только вторая половина</button>
+          <button class="tpl-btn" onclick="fillWeek('mwf')">📆 Пн / Ср / Пт</button>
+          <button class="tpl-btn" onclick="fillWeek('clear')">🚫 Очистить неделю</button>
+          <button class="tpl-btn" onclick="fillWeek('copy_prev')" id="copy-prev-btn">📋 Как прошлая неделя</button>
+          <button class="tpl-btn" onclick="resetWeek()" style="color:var(--red);border-color:var(--red)">↺ Сбросить неделю</button>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#dbeafe;border:1.5px solid #93c5fd"></div>Открыт</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--gray-100);border:1.5px solid var(--gray-200)"></div>Закрыт</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#fee2e2;border:1.5px solid #fca5a5"></div>Занят (есть запись)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#dcfce7;border:1.5px solid #86efac"></div>Открыт (сегодня)</div>
+          <span style="color:var(--text-muted);font-size:.8rem">· Кликните ячейку чтобы открыть/закрыть · Изменения сохраняются сразу</span>
+        </div>
+
+        <div class="card">
+          <div class="card-header" style="flex-wrap:wrap;gap:.75rem">
+            <div>
+              <div class="card-title">Расписание приёма</div>
+              <div style="font-size:.82rem;color:var(--text-muted);margin-top:.2rem">По конкретным датам · автоматически обновляется</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+              <div class="week-nav" style="margin:0">
+                <button class="week-nav-btn" onclick="schedPrevWeek()" id="sched-prev-btn">← Назад</button>
+                <span class="week-nav-label" id="sched-week-label" style="margin:0 1rem"></span>
+                <button class="week-nav-btn" onclick="schedNextWeek()" id="sched-next-btn">Вперёд →</button>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="saveSchedule()" id="save-btn">💾 Сохранить</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div class="sched-outer">
+              <table class="sched-table" id="sched-table"></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: CHAT ══ -->
+      <div class="tab-panel" id="tab-chat" style="height:calc(100vh - 280px)">
+        <div class="chat-layout" style="height:100%;border-radius:var(--radius);overflow:hidden;border:1.5px solid var(--gray-200)">
+          <div class="chat-list">
+            <div class="chat-list-header">Студенты</div>
+            <div id="psych-chat-list"><div class="loader"><div class="spinner"></div></div></div>
+          </div>
+          <div class="chat-main" id="psych-chat-main">
+            <div class="chat-placeholder"><div class="icon">💬</div><p>Выберите студента слева</p></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- RESCHEDULE MODAL -->
+<div class="modal-overlay" id="reschedule-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Перенести запись</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-group">
+      <label>Новая дата</label>
+      <input type="date" id="rs-date" class="mini-input" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label>Новое время</label>
+      <select id="rs-time" style="border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);padding:.5rem;font-size:.9rem;width:100%;outline:none;font-family:var(--font)">
+        <option>09:00</option><option>09:30</option><option>10:00</option><option>10:30</option>
+        <option>11:00</option><option>11:30</option><option>13:00</option><option>13:30</option>
+        <option>14:00</option><option>14:30</option><option>15:00</option><option>15:30</option>
+        <option>16:00</option><option>16:30</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="confirmReschedule()">Перенести</button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/mobile.js"></script>
+<script>
+if (!API.requireAuth('psychologist')) {}
+const currentUser = API.getUser();
+function logout() { API.clearAuth(); window.location.href = '/'; }
+
+const ALL_TIMES = ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
+const MORNING   = ['09:00','09:30','10:00','10:30','11:00','11:30'];
+const AFTERNOON = ['13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
+const MONTHS_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const DAYS_RU   = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+
+const socket = io({ auth: { token: API.getToken() } });
+socket.on('slots_updated', () => { renderSchedTable(); });
+
+let allAppts = [], myPsych = null, schedule = null;
+// If today is Sat/Sun — start from next week since current week is over
+const todayDow = new Date().getDay();
+let schedWeekOffset = (todayDow === 0 || todayDow === 6) ? 1 : 0;
+let rescheduleId = null, activeApptId = null;
+let pendingSlots = {};
+
+// ════ INIT ════
+async function init() {
+  try {
+    // Set user name
+    const me = await API.get('/api/me');
+    document.getElementById('sb-name').textContent = me.name || 'Психолог';
+    document.getElementById('sb-avatar').textContent = (me.name||'П')[0].toUpperCase();
+
+    [allAppts, myPsych] = await Promise.all([
+      API.get('/api/appointments'),
+      API.get('/api/my-psych-profile')
+    ]);
+
+    try { schedule = await API.get(`/api/schedule/${myPsych.id}`); }
+    catch(e) { schedule = {}; }
+    if (!schedule.weekly) schedule.weekly = { "1":[...ALL_TIMES],"2":[...ALL_TIMES],"3":[...ALL_TIMES],"4":[...ALL_TIMES],"5":[...ALL_TIMES] };
+    if (!schedule.overrides) schedule.overrides = {};
+
+    updateStats();
+    renderAppts();
+    renderSchedTable();
+  } catch(e) {
+    console.error(e);
+    showToast('Ошибка загрузки: ' + e.message, 'error');
+  }
+}
+
+// ════ STATS ════
+function updateStats() {
+  const today = localDateStr(new Date());
+  document.getElementById('st-pending').textContent   = allAppts.filter(a=>a.status==='pending').length;
+  document.getElementById('st-confirmed').textContent = allAppts.filter(a=>a.status==='confirmed').length;
+  document.getElementById('st-today').textContent     = allAppts.filter(a=>a.date===today&&a.status!=='cancelled').length;
+  // Unique students (not appointment count)
+  const uniqueStudents = new Set(allAppts.filter(a=>a.status!=='cancelled').map(a=>a.student_id));
+  document.getElementById('st-chats').textContent = uniqueStudents.size;
+  // Pending badge in tab
+  const pendingCount = allAppts.filter(a=>a.status==='pending').length;
+  const badge = document.getElementById('pending-badge');
+  if (badge) { badge.style.display = pendingCount ? 'inline' : 'none'; badge.textContent = pendingCount; }
+  // Browser tab title
+  if (pendingCount) document.title = `(${pendingCount}) Кабинет психолога — AlmauPsych`;
+}
+
+// ════ TABS ════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if (name==='chat') loadChats();
+  if (name==='schedule') renderSchedTable();
+}
+
+// ════ APPOINTMENTS ════
+function clearFilters() { document.getElementById('filter-status').value=''; document.getElementById('filter-date').value=''; renderAppts(); }
+
+function renderAppts() {
+  const sf = document.getElementById('filter-status').value;
+  const df = document.getElementById('filter-date').value;
+  let list = allAppts;
+  if (sf) list = list.filter(a => a.status === sf);
+  if (df) list = list.filter(a => a.date === df);
+  // Sort by submission time — newest first
+  list = [...list].sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+  const el = document.getElementById('appt-list');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><h3>Нет записей</h3><p>По выбранным фильтрам ничего не найдено</p></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(a => {
+    const d = formatDate(a.date);
+    const submittedAt = new Date(a.created_at).toLocaleDateString('ru-RU', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+
+    const statusColors = {
+      pending:   { bg:'#fff7ed', border:'#fed7aa', dot:'#f97316', label:'Ожидает' },
+      confirmed: { bg:'#f0fdf4', border:'#bbf7d0', dot:'#22c55e', label:'Подтверждено' },
+      cancelled: { bg:'#fff1f2', border:'#fecdd3', dot:'#f43f5e', label:'Отменено' },
+      completed: { bg:'#f5f3ff', border:'#ddd6fe', dot:'#8b5cf6', label:'Завершено' },
+    };
+    const sc = statusColors[a.status] || statusColors.pending;
+
+    return `
+    <div style="background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius);margin-bottom:.75rem;overflow:hidden;transition:box-shadow .2s" onmouseenter="this.style.boxShadow='var(--shadow)'" onmouseleave="this.style.boxShadow='none'">
+      <!-- Status bar top -->
+      <div style="height:4px;background:${sc.dot};"></div>
+
+      <div style="padding:1.25rem 1.5rem">
+        <!-- Row 1: student + status + time submitted -->
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.875rem">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--blue-pale);color:var(--blue-dark);font-weight:800;font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">${getInitials(a.student_name)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:1rem">${a.student_name}</div>
+            <div style="font-size:.8rem;color:var(--text-muted)">${a.student_email}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span style="display:inline-flex;align-items:center;gap:.35rem;background:${sc.bg};border:1px solid ${sc.border};color:${sc.dot};border-radius:50px;padding:.3rem .875rem;font-size:.8rem;font-weight:700">
+              <span style="width:7px;height:7px;border-radius:50%;background:${sc.dot};display:inline-block"></span>
+              ${sc.label}
+            </span>
+            <span style="font-size:.75rem;color:var(--gray-400)">подано ${submittedAt}</span>
+          </div>
+        </div>
+
+        <!-- Row 2: appointment info -->
+        <div style="display:flex;align-items:center;gap:1.5rem;padding:.75rem 1rem;background:var(--gray-50);border-radius:var(--radius-sm);margin-bottom:.875rem">
+          <div style="text-align:center;min-width:48px">
+            <div style="font-size:1.5rem;font-weight:800;color:var(--blue-dark);line-height:1">${d.day}</div>
+            <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em">${d.month}</div>
+          </div>
+          <div style="width:1px;height:36px;background:var(--gray-200)"></div>
+          <div>
+            <div style="font-weight:700;font-size:.95rem">🕐 ${a.time}</div>
+            <div style="font-size:.8rem;color:var(--text-muted)">Приём в кабинете психолога</div>
+          </div>
+          ${a.note ? `
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.2rem">Запрос студента</div>
+            <div style="font-size:.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.note}</div>
+          </div>` : ''}
+        </div>
+
+        <!-- Row 3: actions -->
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+          ${a.status === 'pending' ? `
+            <button onclick="setStatus(${a.id},'confirmed')" style="background:#16a34a;color:white;border:none;border-radius:8px;padding:.5rem 1.1rem;font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.35rem">
+              ✓ Принять
+            </button>
+            <button onclick="setStatus(${a.id},'cancelled')" style="background:white;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;padding:.5rem 1.1rem;font-size:.85rem;font-weight:700;cursor:pointer">
+              ✕ Отклонить
+            </button>
+          ` : ''}
+          ${a.status === 'confirmed' ? `
+            <button onclick="openChat(${a.student_id},'${a.student_name.replace(/'/g,"&#39;")}')" style="background:var(--blue-dark);color:white;border:none;border-radius:8px;padding:.5rem 1.1rem;font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.35rem">
+              💬 Написать
+            </button>
+            <button onclick="openReschedule(${a.id},'${a.date}','${a.time}')" style="background:white;color:var(--blue-dark);border:1.5px solid var(--gray-200);border-radius:8px;padding:.5rem 1.1rem;font-size:.85rem;font-weight:600;cursor:pointer">
+              🔄 Перенести
+            </button>
+            <button onclick="setStatus(${a.id},'completed')" style="background:white;color:#7c3aed;border:1.5px solid #ddd6fe;border-radius:8px;padding:.5rem 1.1rem;font-size:.85rem;font-weight:600;cursor:pointer">
+              ✓ Завершить
+            </button>
+          ` : ''}
+          ${a.status === 'cancelled' || a.status === 'completed' ? `
+            <span style="font-size:.82rem;color:var(--text-muted)">Запись закрыта</span>
+          ` : ''}
+          <div style="margin-left:auto">
+            ${a.status !== 'cancelled' && a.status !== 'completed' ? `
+            <button onclick="deleteAppt(${a.id})" title="Удалить запись" style="background:white;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;padding:.5rem .75rem;font-size:.9rem;cursor:pointer">
+              🗑
+            </button>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function setStatus(id,status) {
+  await API.patch(`/api/appointments/${id}`,{status});
+  await refreshAppts();
+  showToast(status==='confirmed'?'✓ Подтверждено':status==='cancelled'?'Отклонено':'Обновлено');
+}
+async function deleteAppt(id) {
+  if(!confirm('Удалить запись? Слот снова станет свободным.')) return;
+  await fetch(`/api/appointments/${id}`,{method:'DELETE',headers:{Authorization:'Bearer '+API.getToken()}});
+  await refreshAppts();
+  showToast('Запись удалена — слот освобождён');
+}
+async function refreshAppts() {
+  allAppts=await API.get('/api/appointments');
+  updateStats(); renderAppts(); renderSchedTable();
+}
+
+// Reschedule
+function openReschedule(id,date,time) {
+  rescheduleId=id;
+  document.getElementById('rs-date').value=date;
+  document.getElementById('rs-time').value=time;
+  document.getElementById('reschedule-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('reschedule-modal').classList.remove('open'); rescheduleId=null; }
+async function confirmReschedule() {
+  const date=document.getElementById('rs-date').value;
+  const time=document.getElementById('rs-time').value;
+  try {
+    const res=await fetch(`/api/appointments/${rescheduleId}/reschedule`,{
+      method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+API.getToken()},
+      body:JSON.stringify({date,time})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error);
+    closeModal(); await refreshAppts(); showToast('✓ Запись перенесена');
+  } catch(e){ showToast(e.message,'error'); }
+}
+
+// ════ DATE-BASED SCHEDULE ════
+// ⚠️ Always use LOCAL date string to avoid UTC timezone shift (Kazakhstan = UTC+5/6)
+function localDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+function getWeekDates(offset) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dow = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow===0?6:dow-1) + offset*7);
+  return Array.from({length:5},(_,i)=>{ const d=new Date(monday); d.setDate(monday.getDate()+i); return d; });
+}
+
+function getEffectiveSlots(dateStr) {
+  if (pendingSlots[dateStr] !== undefined) return pendingSlots[dateStr];
+  if (schedule.overrides[dateStr] !== undefined) return new Set(schedule.overrides[dateStr]);
+  // Parse dateStr as local date to get correct day-of-week
+  const [y,mo,d] = dateStr.split('-').map(Number);
+  const dow = new Date(y, mo-1, d).getDay();
+  const times = schedule.weekly[String(dow)] || schedule.weekly[dow] || [];
+  return new Set(times);
+}
+
+function getBookedForDate(dateStr) {
+  // Only pending/confirmed appointments occupy a slot
+  return new Set(
+    allAppts
+      .filter(a => a.date===dateStr && (a.status==='pending' || a.status==='confirmed'))
+      .map(a=>a.time)
+  );
+}
+
+function renderSchedTable() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = localDateStr(today);
+  const days = getWeekDates(schedWeekOffset);
+  const firstDay = days[0], lastDay = days[days.length-1];
+
+  document.getElementById('sched-week-label').textContent =
+    `${firstDay.getDate()} ${MONTHS_RU[firstDay.getMonth()]} — ${lastDay.getDate()} ${MONTHS_RU[lastDay.getMonth()]} ${lastDay.getFullYear()}`;
+  document.getElementById('sched-prev-btn').disabled = schedWeekOffset <= SCHED_MIN;
+  document.getElementById('sched-next-btn').disabled = schedWeekOffset >= SCHED_MAX;
+
+  let html = `<thead><tr><th>Время</th>`;
+  days.forEach(d => {
+    const ds = localDateStr(d); // ← LOCAL date string, not UTC
+    const isToday = ds===todayStr;
+    const isPast = d < today;
+    html += `<th>
+      <div class="day-head${isToday?' is-today':''}">
+        <div class="dname">${DAYS_RU[d.getDay()]}</div>
+        <div class="dnum">${d.getDate()}</div>
+        <div class="dmonth">${MONTHS_RU[d.getMonth()]}</div>
+        ${!isPast?`<div class="day-mini-btns">
+          <button class="day-mini-btn" onclick="openDay('${ds}')">Всё</button>
+          <button class="day-mini-btn" onclick="closeDay('${ds}')">Закрыть</button>
+          <button class="day-mini-btn" onclick="resetDay('${ds}')" title="Сбросить к стандарту">↺</button>
+        </div>`:''}
+      </div>
+    </th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  ALL_TIMES.forEach(time => {
+    html += `<tr><td>${time}</td>`;
+    days.forEach(d => {
+      const ds = localDateStr(d); // ← LOCAL date string
+      const isPast = d < today;
+      const booked = getBookedForDate(ds);
+      const slots = getEffectiveSlots(ds);
+      const isBooked = booked.has(time);
+      const isOpen   = slots.has(time);
+      const isToday  = ds===todayStr;
+
+      if (isPast) {
+        html += `<td><button class="slot-btn past">·</button></td>`;
+      } else if (isBooked) {
+        html += `<td><button class="slot-btn booked" title="Занято — есть запись">📌 занято</button></td>`;
+      } else if (isOpen) {
+        const cls = isToday ? 'today-open' : 'open';
+        html += `<td><button class="slot-btn ${cls}" onclick="toggleSlot('${ds}','${time}')">✓ открыт</button></td>`;
+      } else {
+        html += `<td><button class="slot-btn closed" onclick="toggleSlot('${ds}','${time}')">—</button></td>`;
+      }
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody>`;
+  document.getElementById('sched-table').innerHTML = html;
+}
+
+function toggleSlot(dateStr, time) {
+  const booked = getBookedForDate(dateStr);
+  if (booked.has(time)) return; // нельзя закрыть занятый слот
+  if (!pendingSlots[dateStr]) pendingSlots[dateStr] = new Set(getEffectiveSlots(dateStr));
+  if (pendingSlots[dateStr].has(time)) pendingSlots[dateStr].delete(time);
+  else pendingSlots[dateStr].add(time);
+  renderSchedTable();
+}
+
+function openDay(dateStr) {
+  pendingSlots[dateStr] = new Set(ALL_TIMES);
+  renderSchedTable();
+}
+function closeDay(dateStr) {
+  const booked = getBookedForDate(dateStr);
+  pendingSlots[dateStr] = new Set([...booked]);
+  renderSchedTable();
+}
+// Reset day — removes any override, falls back to weekly default (all open)
+async function resetDay(dateStr) {
+  delete pendingSlots[dateStr];
+  // Also remove from saved overrides immediately
+  if (schedule.overrides[dateStr] !== undefined) {
+    delete schedule.overrides[dateStr];
+    await fetch('/api/schedule', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + API.getToken() },
+      body: JSON.stringify({ weekly: schedule.weekly, overrides: schedule.overrides })
+    });
+    showToast('День сброшен к стандартному расписанию');
+  }
+  renderSchedTable();
+}
+
+// Min = start offset (0 or 1 depending on weekend), Max = start+2 (3 weeks total)
+const SCHED_MIN = (new Date().getDay()===0||new Date().getDay()===6) ? 1 : 0;
+const SCHED_MAX = SCHED_MIN + 2;
+function schedPrevWeek() {
+  if (schedWeekOffset > SCHED_MIN) { schedWeekOffset--; pendingSlots={}; renderSchedTable(); }
+}
+function schedNextWeek() {
+  if (schedWeekOffset < SCHED_MAX) { schedWeekOffset++; pendingSlots={}; renderSchedTable(); }
+}
+
+// Fill entire visible week with a template
+function fillWeek(tpl) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days = getWeekDates(schedWeekOffset);
+
+  // If copy_prev, load previous week's overrides
+  if (tpl === 'copy_prev') {
+    const prevDays = getWeekDates(schedWeekOffset - 1);
+    days.forEach((d,i) => {
+      const ds = localDateStr(d);
+      if (d < today) return;
+      const prevDs = localDateStr(prevDays[i]);
+      const prevSlots = getEffectiveSlots(prevDs);
+      const booked = getBookedForDate(ds);
+      pendingSlots[ds] = new Set([...prevSlots, ...booked]);
+    });
+    renderSchedTable();
+    showToast('Скопировано с прошлой недели — нажмите Сохранить');
+    return;
+  }
+
+  days.forEach(d => {
+    const ds = localDateStr(d);
+    if (d < today) return;
+    const booked = getBookedForDate(ds);
+    const dow = d.getDay();
+    let times;
+    if (tpl==='full') times = new Set(ALL_TIMES);
+    else if (tpl==='morning') times = new Set(MORNING);
+    else if (tpl==='afternoon') times = new Set(AFTERNOON);
+    else if (tpl==='mwf') times = (dow===2||dow===4) ? new Set() : new Set(ALL_TIMES);
+    else times = new Set();
+    booked.forEach(t => times.add(t));
+    pendingSlots[ds] = times;
+  });
+  renderSchedTable();
+  showToast('Шаблон применён — нажмите Сохранить');
+}
+
+// Remove all overrides for the visible week → revert to weekly defaults
+async function resetWeek() {
+  if (!confirm('Сбросить всю неделю к стандартному расписанию?')) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days = getWeekDates(schedWeekOffset);
+  days.forEach(d => {
+    const ds = localDateStr(d);
+    delete schedule.overrides[ds];
+    delete pendingSlots[ds];
+  });
+  await fetch('/api/schedule', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + API.getToken() },
+    body: JSON.stringify({ weekly: schedule.weekly, overrides: schedule.overrides })
+  });
+  showToast('Неделя сброшена — все дни открыты по умолчанию');
+  renderSchedTable();
+}
+
+async function saveSchedule() {
+  if (!Object.keys(pendingSlots).length) { showToast('Нет несохранённых изменений'); return; }
+  const btn = document.getElementById('save-btn');
+  btn.textContent = 'Сохраняю...'; btn.disabled = true;
+  try {
+    // Merge pending into schedule overrides
+    Object.entries(pendingSlots).forEach(([date, setTimes]) => {
+      schedule.overrides[date] = [...setTimes];
+    });
+    const res = await fetch('/api/schedule', {
+      method:'PUT',
+      headers:{'Content-Type':'application/json', Authorization:'Bearer '+API.getToken()},
+      body: JSON.stringify({ weekly: schedule.weekly, overrides: schedule.overrides })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    pendingSlots = {};
+    showToast('✅ Расписание сохранено!');
+  } catch(e) { showToast(e.message,'error'); }
+  finally { btn.textContent='💾 Сохранить'; btn.disabled=false; }
+}
+
+// ════ CHAT (per student) ════
+let activeChatStudentId = null;
+
+async function loadChats() {
+  const el = document.getElementById('psych-chat-list');
+  el.innerHTML = `<div class="loader"><div class="spinner"></div></div>`;
+  try {
+    const students = await API.get('/api/chat-students');
+    if (!students.length) {
+      el.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:.9rem">Нет записей от студентов</div>`;
+      return;
+    }
+    el.innerHTML = students.map(s => {
+      const preview = s.lastMessage ? s.lastMessage.text.slice(0,40) + (s.lastMessage.text.length>40?'…':'') : `${s.appointments.length} запис.`;
+      return `<div class="chat-item" id="pci-${s.id}" onclick="openChat(${s.id},'${s.name.replace(/'/g,'&#39;')}')">
+        <div class="avatar" style="width:40px;height:40px;font-size:.85rem;background:var(--blue-pale);color:var(--blue-dark)">${getInitials(s.name)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="chat-item-name">${s.name}</div>
+          <div class="chat-item-preview">${preview}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = `<div style="padding:1rem;color:var(--text-muted)">Ошибка загрузки</div>`; }
+}
+
+async function openChat(studentId, studentName) {
+  activeChatStudentId = studentId;
+  // Switch to chat tab
+  const chatBtn = [...document.querySelectorAll('.tab-btn')].find(b=>b.textContent.includes('Чаты'));
+  if (chatBtn) switchTab('chat', chatBtn);
+  await loadChats();
+  document.querySelectorAll('.chat-item').forEach(e=>e.classList.remove('active'));
+  document.getElementById(`pci-${studentId}`)?.classList.add('active');
+  socket.emit('join_student_chat', studentId);
+
+  // Get appointments for this student
+  const studentAppts = allAppts.filter(a => a.student_id === studentId);
+
+  document.getElementById('psych-chat-main').innerHTML = `
+    <div class="chat-header" style="flex-direction:column;align-items:flex-start;gap:.5rem">
+      <div style="display:flex;align-items:center;gap:.75rem;width:100%">
+        <div class="avatar" style="width:44px;height:44px;background:var(--blue-pale);color:var(--blue-dark);font-weight:700;flex-shrink:0">${getInitials(studentName)}</div>
+        <div style="flex:1">
+          <div class="name">${studentName}</div>
+          <div class="status">Студент AlmaU</div>
+        </div>
+      </div>
+      ${studentAppts.length ? `
+      <div style="width:100%;display:flex;gap:.5rem;flex-wrap:wrap;padding:.5rem 0 0">
+        ${studentAppts.map(a=>`
+          <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:.3rem .75rem;font-size:.78rem;display:flex;align-items:center;gap:.4rem">
+            <span style="font-weight:700">${formatDate(a.date).day} ${formatDate(a.date).month}</span>
+            <span style="color:var(--text-muted)">${a.time}</span>
+            <span class="status-badge status-${a.status}" style="padding:.1rem .5rem;font-size:.7rem">${statusLabel(a.status)}</span>
+          </div>`).join('')}
+      </div>` : ''}
+    </div>
+    <div class="chat-messages" id="pmsg"></div>
+    <div class="chat-input-area">
+      <textarea class="chat-input" id="pmsg-input" placeholder="Написать ${studentName}..." rows="1" onkeydown="handleKey(event)"></textarea>
+      <button class="send-btn" onclick="sendMsg()">➤</button>
+    </div>`;
+
+  const msgs = await API.get(`/api/chat/${studentId}`);
+  const el = document.getElementById('pmsg');
+  if (!msgs.length) el.innerHTML = `<div style="text-align:center;color:var(--text-muted);font-size:.9rem;margin:2rem">Начните диалог со студентом</div>`;
+  else msgs.forEach(m => appendMsg(m));
+  scrollDown();
+}
+
+function appendMsg(m) {
+  const el = document.getElementById('pmsg'); if (!el) return;
+  const isMine = m.sender_id === currentUser?.id;
+  document.querySelector('#pmsg div[style*="text-align:center"]')?.remove();
+  const div = document.createElement('div');
+  div.className = `msg ${isMine?'sent':'received'}`;
+  div.innerHTML = `<div class="msg-bubble">${m.text}</div><div class="msg-time">${isMine?'Вы':m.sender_name} · ${formatTime(m.created_at)}</div>`;
+  el.appendChild(div); scrollDown();
+}
+function scrollDown() { const e=document.getElementById('pmsg'); if(e) e.scrollTop=e.scrollHeight; }
+function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); } }
+function sendMsg() {
+  const input = document.getElementById('pmsg-input');
+  if (!input || !activeChatStudentId) return;
+  const text = input.value.trim(); if (!text) return;
+  socket.emit('send_student_message', { student_id: activeChatStudentId, text });
+  input.value = '';
+}
+socket.on('new_student_message', m => {
+  if (m.student_id === activeChatStudentId) appendMsg(m);
+  // Refresh chat list preview
+  const ci = document.getElementById(`pci-${m.student_id}`);
+  if (ci) ci.querySelector('.chat-item-preview').textContent = m.text.slice(0,40);
+});
+
+// Auto-advance: refresh when day changes
+function scheduleAutoRefresh() {
+  const now = new Date();
+  const msToMidnight = new Date(now.getFullYear(),now.getMonth(),now.getDate()+1) - now;
+  setTimeout(async () => {
+    allAppts = await API.get('/api/appointments');
+    updateStats(); renderAppts(); renderSchedTable();
+    scheduleAutoRefresh(); // schedule next
+  }, msToMidnight + 1000);
+}
+
+init().then(() => scheduleAutoRefresh());
+</script>
+</body>
+</html>

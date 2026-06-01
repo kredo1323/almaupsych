@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Чат — AlmauPsych</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .appt-chips { display:flex; gap:.5rem; flex-wrap:wrap; padding:.75rem 1rem; background:var(--gray-50); border-bottom:1px solid var(--gray-200); }
+    .appt-chip {
+      display:flex; align-items:center; gap:.4rem;
+      background:white; border:1px solid var(--gray-200); border-radius:8px;
+      padding:.3rem .75rem; font-size:.78rem;
+    }
+    .appt-chip .chip-date { font-weight:700; color:var(--blue-dark); }
+    .appt-chip .chip-time { color:var(--text-muted); }
+    .empty-chat {
+      flex:1; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; text-align:center; padding:2rem; color:var(--text-muted);
+    }
+    .empty-chat .icon { font-size:3rem; margin-bottom:1rem; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><a href="/dashboard.html">AlmauPsych<span style="color:#e57373">.</span></a></div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard.html"><span class="icon">🏠</span> Главная</a>
+      <a href="/booking.html"><span class="icon">📅</span> Записаться</a>
+      <a href="/chat.html" class="active"><span class="icon">💬</span> Чат</a>
+      <a href="/profile.html"><span class="icon">👤</span> Профиль</a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-user-info">
+        <div class="sidebar-avatar" id="sb-avatar">?</div>
+        <div>
+          <div class="sidebar-user-name" id="sb-name">...</div>
+          <div class="sidebar-user-role" style="color:rgba(255,255,255,.5)">Студент</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content" style="display:flex;flex-direction:column;overflow:hidden">
+    <div class="main-header" style="flex-shrink:0">
+      <div class="page-title">Чат с психологом</div>
+      <button onclick="logout()" class="btn btn-outline btn-sm">Выйти</button>
+    </div>
+
+    <!-- Chat area -->
+    <div style="flex:1;overflow:hidden;display:flex;flex-direction:column" id="chat-area">
+      <div class="empty-chat" id="empty-state">
+        <div class="spinner"></div>
+        <p>Загрузка...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/mobile.js"></script>
+<script>
+if (!API.requireAuth('student')) {}
+const user = API.getUser();
+if (user) {
+  document.getElementById('sb-name').textContent = user.name;
+  document.getElementById('sb-avatar').textContent = getInitials(user.name);
+}
+function logout() { API.clearAuth(); window.location.href = '/'; }
+
+const socket = io({ auth: { token: API.getToken() } });
+let myStudentId = null;
+
+async function init() {
+  const me = await API.get('/api/me');
+  myStudentId = me.id;
+
+  // Join the student chat room
+  socket.emit('join_student_chat', myStudentId);
+
+  // Load appointments
+  const appts = await API.get('/api/appointments');
+
+  if (!appts.length) {
+    document.getElementById('chat-area').innerHTML = `
+      <div class="empty-chat">
+        <div class="icon">📅</div>
+        <h3>Нет записей</h3>
+        <p>Запишитесь к психологу чтобы открыть чат</p>
+        <a href="/booking.html" class="btn btn-primary" style="margin-top:1rem">Записаться</a>
+      </div>`;
+    return;
+  }
+
+  // Build chat UI
+  const area = document.getElementById('chat-area');
+  area.innerHTML = `
+    <div style="display:flex;flex-direction:column;height:100%">
+      <!-- Psychologist header -->
+      <div class="chat-header">
+        <div class="avatar" style="width:44px;height:44px;background:var(--blue-pale);color:var(--blue-dark);font-weight:700;flex-shrink:0">П</div>
+        <div class="chat-header-info">
+          <div class="name">Психологический центр AlmaU</div>
+          <div class="status"><span class="online-dot"></span>Психолог</div>
+        </div>
+      </div>
+
+      <!-- Appointments chips -->
+      <div class="appt-chips">
+        <span style="font-size:.78rem;font-weight:600;color:var(--text-muted);align-self:center;margin-right:.25rem">Ваши записи:</span>
+        ${appts.map(a => `
+          <div class="appt-chip">
+            <span class="chip-date">${formatDate(a.date).day} ${formatDate(a.date).month}</span>
+            <span class="chip-time">${a.time}</span>
+            <span class="status-badge status-${a.status}" style="padding:.1rem .5rem;font-size:.7rem">${statusLabel(a.status)}</span>
+          </div>`).join('')}
+      </div>
+
+      <!-- Messages -->
+      <div class="chat-messages" id="messages" style="flex:1"></div>
+
+      <!-- Input -->
+      <div class="chat-input-area">
+        <textarea class="chat-input" id="chat-input" placeholder="Написать психологу..." rows="1" onkeydown="handleKey(event)"></textarea>
+        <button class="send-btn" onclick="sendMsg()">➤</button>
+      </div>
+    </div>`;
+
+  // Load message history
+  const msgs = await API.get(`/api/chat/${myStudentId}`);
+  const el = document.getElementById('messages');
+  if (!msgs.length) {
+    el.innerHTML = `<div style="text-align:center;color:var(--text-muted);font-size:.9rem;margin:2rem">
+      Здравствуйте! Напишите психологу — он ответит в рабочее время.
+    </div>`;
+  } else {
+    msgs.forEach(m => appendMsg(m));
+  }
+  scrollDown();
+}
+
+function appendMsg(m) {
+  const el = document.getElementById('messages'); if (!el) return;
+  document.querySelector('#messages div[style*="text-align:center"]')?.remove();
+  const isMine = m.sender_id === (user?.id || myStudentId);
+  const div = document.createElement('div');
+  div.className = `msg ${isMine?'sent':'received'}`;
+  div.innerHTML = `
+    <div class="msg-bubble">${m.text}</div>
+    <div class="msg-time">${isMine?'Вы':m.sender_name} · ${formatTime(m.created_at)}</div>`;
+  el.appendChild(div);
+  scrollDown();
+}
+
+function scrollDown() { const e = document.getElementById('messages'); if(e) e.scrollTop = e.scrollHeight; }
+function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); } }
+
+function sendMsg() {
+  const input = document.getElementById('chat-input');
+  if (!input || !myStudentId) return;
+  const text = input.value.trim(); if (!text) return;
+  socket.emit('send_student_message', { student_id: myStudentId, text });
+  input.value = '';
+}
+
+socket.on('new_student_message', m => {
+  if (m.student_id === myStudentId) appendMsg(m);
+});
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Запись к психологу — AlmauPsych</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; margin-bottom: 1.5rem; }
+    .day-btn {
+      border: 2px solid var(--gray-200); border-radius: var(--radius-sm);
+      padding: 0.75rem 0.25rem; text-align: center; cursor: pointer;
+      transition: all var(--transition); background: white;
+    }
+    .day-btn:hover:not(.day-past) { border-color: var(--blue-light); }
+    .day-btn.selected { background: var(--blue-dark); color: white; border-color: var(--blue-dark); }
+    .day-btn.day-past { opacity: 0.35; cursor: not-allowed; background: var(--gray-100); }
+    .day-btn .day-name { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.3rem; }
+    .day-btn.selected .day-name { color: rgba(255,255,255,0.7); }
+    .day-btn .day-num { font-size: 1.35rem; font-weight: 800; color: var(--text); line-height: 1; }
+    .day-btn.selected .day-num { color: white; }
+    .day-btn .day-avail { font-size: 0.7rem; margin-top: 0.35rem; color: var(--blue-light); font-weight: 600; }
+    .day-btn.selected .day-avail { color: rgba(255,255,255,0.8); }
+    .day-btn.day-past .day-avail { color: var(--gray-400); }
+
+    .nav-week { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .nav-week button {
+      background: var(--gray-100); border: none; border-radius: var(--radius-sm);
+      padding: 0.4rem 0.9rem; cursor: pointer; font-size: 1rem; color: var(--blue-dark);
+      transition: background var(--transition);
+    }
+    .nav-week button:hover { background: var(--gray-200); }
+    .nav-week .week-label { font-weight: 700; color: var(--text); font-size: 0.95rem; }
+
+    .time-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+    .time-slot {
+      border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+      padding: 0.65rem; text-align: center; cursor: pointer;
+      font-size: 0.875rem; font-weight: 600; color: var(--gray-600);
+      transition: all var(--transition); background: white;
+    }
+    .time-slot:hover { border-color: var(--blue-light); color: var(--blue-dark); }
+    .time-slot.selected { background: var(--blue-dark); color: white; border-color: var(--blue-dark); }
+    .time-slot.booked { background: var(--gray-100); color: var(--gray-400); cursor: not-allowed; text-decoration: line-through; }
+
+    .info-banner {
+      background: var(--blue-pale); border: 1.5px solid var(--blue-light);
+      border-radius: var(--radius-sm); padding: 1rem 1.25rem;
+      display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1.5rem;
+      font-size: 0.9rem; color: var(--blue-dark);
+    }
+    .info-banner .icon { font-size: 1.25rem; flex-shrink: 0; margin-top: 0.1rem; }
+
+    .psych-row {
+      display: flex; gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .psych-chip {
+      display: flex; align-items: center; gap: 0.6rem;
+      background: white; border: 1.5px solid var(--gray-200);
+      border-radius: 50px; padding: 0.45rem 0.9rem 0.45rem 0.45rem;
+      font-size: 0.85rem; font-weight: 600;
+    }
+    .psych-chip .chip-av { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--blue-pale), var(--blue-light)); display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 800; color: var(--blue-dark); }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><a href="/dashboard.html">AlmauPsych<span style="color:var(--red)">.</span></a></div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard.html"><span class="icon">🏠</span> Главная</a>
+      <a href="/booking.html" class="active"><span class="icon">📅</span> Записаться</a>
+      <a href="/chat.html"><span class="icon">💬</span> Чат</a>
+      <a href="/profile.html"><span class="icon">👤</span> Профиль</a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-user-info">
+        <div class="sidebar-avatar" id="sb-avatar">?</div>
+        <div>
+          <div class="sidebar-user-name" id="sb-name">...</div>
+          <div class="sidebar-user-role" style="color:rgba(255,255,255,0.5)">Студент</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="main-header">
+      <div class="page-title">Запись к психологу</div>
+      <button onclick="logout()" class="btn btn-outline btn-sm">Выйти</button>
+    </div>
+    <div class="main-body">
+      <div class="booking-grid">
+        <!-- LEFT -->
+        <div>
+          <div class="info-banner">
+            <span class="icon">ℹ️</span>
+            <div><strong>Как записаться:</strong> выберите свободный день, удобное время и нажмите «Записаться». Психолог подтвердит запись — вы получите уведомление и сможете написать ему в чате.</div>
+          </div>
+
+          <!-- Psychologist chips -->
+          <div class="psych-row" id="psych-chips"></div>
+
+          <!-- Week navigation -->
+          <div class="card" style="margin-bottom:1.5rem">
+            <div class="card-header"><div class="card-title">1. Выберите удобный день</div></div>
+            <div class="card-body">
+              <div class="nav-week">
+                <button onclick="prevWeek()">← Назад</button>
+                <span class="week-label" id="week-label"></span>
+                <button onclick="nextWeek()">Вперёд →</button>
+              </div>
+              <div class="week-strip" id="week-strip"></div>
+            </div>
+          </div>
+
+          <!-- Time slots -->
+          <div class="card" style="margin-bottom:1.5rem">
+            <div class="card-header"><div class="card-title">2. Выберите время</div></div>
+            <div class="card-body">
+              <div class="time-slots" id="time-slots">
+                <p style="color:var(--text-muted);grid-column:1/-1;font-size:0.9rem">Сначала выберите день</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Note -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">3. Запрос (необязательно)</div></div>
+            <div class="card-body">
+              <div class="form-group" style="margin:0">
+                <textarea id="note" rows="3" placeholder="Кратко опишите, с чем хотите обратиться к специалисту..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: SUMMARY -->
+        <div class="booking-summary">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Ваша запись</div></div>
+            <div class="card-body">
+              <div class="summary-row">
+                <span class="summary-label">Специалист</span>
+                <span class="summary-value">Психолог AlmaU</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">Дата</span>
+                <span class="summary-value" id="sum-date">—</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">Время</span>
+                <span class="summary-value" id="sum-time">—</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">Формат</span>
+                <span class="summary-value">Очно, кабинет психолога</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">Стоимость</span>
+                <span class="summary-value" style="color:var(--blue-mid);font-weight:700">Бесплатно</span>
+              </div>
+              <div style="margin-top:1.5rem">
+                <button id="book-btn" class="btn btn-primary" style="width:100%;justify-content:center" disabled onclick="bookAppointment()">
+                  Записаться
+                </button>
+                <p style="text-align:center;color:var(--text-muted);font-size:0.8rem;margin-top:0.75rem">
+                  🔒 Конфиденциально · Бесплатно
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Almau branding -->
+          <div style="margin-top:1.25rem;text-align:center;padding:1.25rem;background:var(--blue-pale);border-radius:var(--radius);border:1.5px solid var(--gray-200)">
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem">Психологический центр</div>
+            <div style="font-weight:700;color:var(--blue-dark)">Almaty Management University</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem">Основан в 1988 году</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/mobile.js"></script>
+<script>
+  if (!API.requireAuth('student')) {}
+  const user = API.getUser();
+  if (user) { document.getElementById('sb-name').textContent = user.name; document.getElementById('sb-avatar').textContent = getInitials(user.name); }
+  function logout() { API.clearAuth(); window.location.href = '/'; }
+
+  const ALL_TIMES = ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
+  const DAY_NAMES = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  const MONTHS = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+
+  // ⚠️ Use LOCAL date string (not UTC) to avoid timezone shift in UTC+5/6
+  function localDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  let weekOffset = 0;
+  let selected = { date: null, time: null };
+  // Cache: date -> { available[], booked[], all[] }
+  let slotCache = {};
+
+  // Socket — слушаем обновления расписания и записей
+  const socket = io({ auth: { token: API.getToken() } });
+  socket.on('slots_updated', () => {
+    slotCache = {}; // сбрасываем кэш
+    renderWeekAsync();
+    if (selected.date) renderTimeSlots(selected.date);
+  });
+
+  async function getSlots(dateStr) {
+    if (!slotCache[dateStr]) {
+      try {
+        slotCache[dateStr] = await API.get(`/api/available-slots/${dateStr}`);
+      } catch(e) {
+        slotCache[dateStr] = { available: [], booked: [], all: [] };
+      }
+    }
+    return slotCache[dateStr];
+  }
+
+  function getWeekDates(offset) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dow = today.getDay();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1) + offset * 7);
+    return Array.from({length: 7}, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
+  }
+
+  async function renderWeekAsync() {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const days = getWeekDates(weekOffset);
+    const first = days[0], last = days[6];
+    document.getElementById('week-label').textContent =
+      `${first.getDate()} — ${last.getDate()} ${MONTHS[last.getMonth()]} ${last.getFullYear()}`;
+
+    // Render placeholder first
+    document.getElementById('week-strip').innerHTML = days.map(d => {
+      const isPast = d < today;
+      const dateStr = localDateStr(d);
+      const isSelected = selected.date === dateStr;
+      const cached = slotCache[dateStr];
+      const freeCount = cached ? cached.available.length : null;
+      return `<div class="day-btn${isSelected?' selected':''}${isPast?' day-past':''}" id="db-${dateStr}"
+        ${!isPast?`onclick="selectDay('${dateStr}')"`:''}>
+        <div class="day-name">${DAY_NAMES[d.getDay()]}</div>
+        <div class="day-num">${d.getDate()}</div>
+        <div class="day-avail" id="da-${dateStr}">${isPast?'—':freeCount===null?'...':(freeCount===0?'нет приёма':freeCount+' окон')}</div>
+      </div>`;
+    }).join('');
+
+    // Fetch counts async for future dates
+    for (const d of days) {
+      if (d < today) continue;
+      const dateStr = localDateStr(d);
+      getSlots(dateStr).then(data => {
+        const label = document.getElementById(`da-${dateStr}`);
+        const btn = document.getElementById(`db-${dateStr}`);
+        if (!label || !btn) return;
+        const freeCount = data.available.length;
+        label.textContent = freeCount === 0 ? 'нет приёма' : freeCount + ' окон';
+        if (freeCount === 0) {
+          btn.classList.add('day-past');
+          btn.removeAttribute('onclick');
+        } else {
+          btn.classList.remove('day-past');
+          btn.setAttribute('onclick', `selectDay('${dateStr}')`);
+        }
+        if (selected.date === dateStr) btn.classList.add('selected');
+      });
+    }
+  }
+
+  function prevWeek() { if (weekOffset > 0) { weekOffset--; renderWeekAsync(); } }
+  function nextWeek() { if (weekOffset < 3) { weekOffset++; renderWeekAsync(); } }
+
+  async function selectDay(dateStr) {
+    selected.date = dateStr; selected.time = null;
+    document.getElementById('sum-time').textContent = '—';
+    document.getElementById('sum-date').textContent =
+      new Date(dateStr+'T12:00:00').toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
+    checkReady();
+    renderWeekAsync();
+    await renderTimeSlots(dateStr);
+  }
+
+  async function renderTimeSlots(dateStr) {
+    const el = document.getElementById('time-slots');
+    el.innerHTML = `<p style="color:var(--text-muted);grid-column:1/-1;font-size:.9rem">Загрузка...</p>`;
+    const data = await getSlots(dateStr);
+    const shown = ALL_TIMES.filter(t => data.all.includes(t) || data.available.includes(t) || data.booked.includes(t));
+    if (!shown.length) {
+      el.innerHTML = `<p style="color:var(--text-muted);grid-column:1/-1;font-size:.9rem">В этот день приёма нет</p>`;
+      return;
+    }
+    el.innerHTML = shown.map(t => {
+      const isFree = data.available.includes(t);
+      return `<div class="time-slot${!isFree?' booked':''}" ${isFree?`onclick="selectTime('${t}')"`:''}
+        id="ts-${t.replace(':','-')}">${t}</div>`;
+    }).join('');
+    // Restore selected time if still free
+    if (selected.time && data.available.includes(selected.time)) {
+      document.getElementById(`ts-${selected.time.replace(':','-')}`)?.classList.add('selected');
+    } else {
+      selected.time = null;
+      document.getElementById('sum-time').textContent = '—';
+      checkReady();
+    }
+  }
+
+  function selectTime(time) {
+    document.querySelectorAll('.time-slot:not(.booked)').forEach(el => el.classList.remove('selected'));
+    document.getElementById(`ts-${time.replace(':','-')}`)?.classList.add('selected');
+    selected.time = time;
+    document.getElementById('sum-time').textContent = time;
+    checkReady();
+  }
+
+  function checkReady() {
+    document.getElementById('book-btn').disabled = !(selected.date && selected.time);
+  }
+
+  async function bookAppointment() {
+    const note = document.getElementById('note').value;
+    const btn = document.getElementById('book-btn');
+    btn.textContent = 'Создаём запись...'; btn.disabled = true;
+    try {
+      await API.post('/api/appointments', { date: selected.date, time: selected.time, note });
+      showToast('Запись создана! Ожидайте подтверждения.');
+      setTimeout(() => window.location.href = '/dashboard.html', 1500);
+    } catch(e) {
+      showToast(e.message, 'error');
+      // Refresh slots in case it was taken by someone else
+      delete slotCache[selected.date];
+      await renderTimeSlots(selected.date);
+      btn.textContent = 'Записаться'; btn.disabled = false;
+    }
+  }
+
+  // Remove psychologist chips section (not needed with single admin)
+  const chipsEl = document.getElementById('psych-chips');
+  if (chipsEl) chipsEl.style.display = 'none';
+
+  renderWeekAsync();
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Регистрация — AlmauPsych</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-left">
+    <div class="auth-left-content">
+      <h2>Ваш безопасный<br>уголок поддержки</h2>
+      <p>Психологическая помощь студентам Almaty University — конфиденциально и бесплатно</p>
+      <div class="auth-features">
+        <div class="auth-feature">
+          <div class="auth-feature-icon">🔒</div>
+          <div class="auth-feature-text">Полная конфиденциальность — ваши данные защищены</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">📅</div>
+          <div class="auth-feature-text">Гибкое расписание — запись в удобное время</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">💬</div>
+          <div class="auth-feature-text">Чат с психологом после подтверждения записи</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">🎓</div>
+          <div class="auth-feature-text">Только для студентов и сотрудников AlmaU</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-container">
+      <div class="auth-logo">AlmauPsych<span class="dot">.</span></div>
+      <h1>Создать аккаунт</h1>
+      <p class="subtitle">Только для почты @almau.edu.kz</p>
+
+      <div class="error-msg" id="error-msg"></div>
+      <div class="success-msg" id="success-msg"></div>
+
+      <form id="register-form">
+        <div class="form-group">
+          <label>Ваше имя</label>
+          <input type="text" id="name" placeholder="Иван Иванов" required>
+        </div>
+        <div class="form-group">
+          <label>Корпоративная почта</label>
+          <input type="email" id="email" placeholder="250111@almau.edu.kz" required>
+          <div class="hint">Только адреса @almau.edu.kz</div>
+        </div>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" id="password" placeholder="Минимум 6 символов" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label>Повторите пароль</label>
+          <input type="password" id="password2" placeholder="Повторите пароль" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center" id="submit-btn">
+          Зарегистрироваться
+        </button>
+      </form>
+
+      <div class="form-footer">
+        Уже есть аккаунт? <a href="/login.html">Войти</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  if (API.isLoggedIn()) {
+    const u = API.getUser();
+    window.location.href = u?.role === 'psychologist' ? '/psych.html' : '/dashboard.html';
+  }
+
+  document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const password2 = document.getElementById('password2').value;
+    const errEl = document.getElementById('error-msg');
+    const okEl = document.getElementById('success-msg');
+    const btn = document.getElementById('submit-btn');
+
+    errEl.className = 'error-msg';
+    if (password !== password2) { errEl.textContent = 'Пароли не совпадают'; errEl.className = 'error-msg show'; return; }
+    if (!email.endsWith('@almau.edu.kz')) { errEl.textContent = 'Используйте корпоративную почту @almau.edu.kz'; errEl.className = 'error-msg show'; return; }
+
+    btn.textContent = 'Регистрация...'; btn.disabled = true;
+    try {
+      const data = await API.post('/api/register', { name, email, password });
+      API.setAuth(data.token, data.user);
+      okEl.textContent = 'Аккаунт создан! Перенаправляем...';
+      okEl.className = 'success-msg show';
+      setTimeout(() => window.location.href = '/dashboard.html', 1000);
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.className = 'error-msg show';
+      btn.textContent = 'Зарегистрироваться'; btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
