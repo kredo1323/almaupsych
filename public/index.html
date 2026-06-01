@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>AlmauPsych — Психологическая помощь AlmaU</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -140,12 +140,4 @@
     { icon: '💬', title: 'Чат после записи', text: 'После подтверждения записи открывается защищённый чат с психологом — можно задать вопросы заранее.' }
   ];
   document.getElementById('psych-grid').innerHTML = aboutCards.map(c => `
-    <div class="step-card" style="text-align:center">
-      <div style="font-size:2.5rem;margin-bottom:1rem">${c.icon}</div>
-      <h3>${c.title}</h3>
-      <p>${c.text}</p>
-    </div>
-  `).join('');
-</script>
-</body>
-</html>
+    <di

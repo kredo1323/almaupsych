@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Кабинет психолога — AlmauPsych</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -92,7 +92,7 @@
 </head>
 <body>
 <div class="app-layout">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo"><a href="/psych.html">AlmauPsych<span style="color:#e57373">.</span></a></div>
     <nav class="sidebar-nav">
       <a href="/psych.html" class="active"><span class="icon">📋</span> Кабинет</a>
@@ -745,13 +745,17 @@ async function openChat(studentId, studentName) {
   scrollDown();
 }
 
+function escHtml(t) {
+  return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function appendMsg(m) {
   const el = document.getElementById('pmsg'); if (!el) return;
   const isMine = m.sender_id === currentUser?.id;
   document.querySelector('#pmsg div[style*="text-align:center"]')?.remove();
   const div = document.createElement('div');
   div.className = `msg ${isMine?'sent':'received'}`;
-  div.innerHTML = `<div class="msg-bubble">${m.text}</div><div class="msg-time">${isMine?'Вы':m.sender_name} · ${formatTime(m.created_at)}</div>`;
+  div.innerHTML = `<div class="msg-bubble">${escHtml(m.text)}</div><div class="msg-time">${isMine?'Вы':escHtml(m.sender_name)} · ${formatTime(m.created_at)}</div>`;
   el.appendChild(div); scrollDown();
 }
 function scrollDown() { const e=document.getElementById('pmsg'); if(e) e.scrollTop=e.scrollHeight; }

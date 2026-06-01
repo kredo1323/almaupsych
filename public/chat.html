@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Чат — AlmauPsych</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
@@ -24,7 +24,7 @@
 </head>
 <body>
 <div class="app-layout">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo"><a href="/dashboard.html">AlmauPsych<span style="color:#e57373">.</span></a></div>
     <nav class="sidebar-nav">
       <a href="/dashboard.html"><span class="icon">🏠</span> Главная</a>
@@ -142,6 +142,10 @@ async function init() {
   scrollDown();
 }
 
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function appendMsg(m) {
   const el = document.getElementById('messages'); if (!el) return;
   document.querySelector('#messages div[style*="text-align:center"]')?.remove();
@@ -149,8 +153,8 @@ function appendMsg(m) {
   const div = document.createElement('div');
   div.className = `msg ${isMine?'sent':'received'}`;
   div.innerHTML = `
-    <div class="msg-bubble">${m.text}</div>
-    <div class="msg-time">${isMine?'Вы':m.sender_name} · ${formatTime(m.created_at)}</div>`;
+    <div class="msg-bubble">${escHtml(m.text)}</div>
+    <div class="msg-time">${isMine?'Вы':escHtml(m.sender_name||'')} · ${formatTime(m.created_at)}</div>`;
   el.appendChild(div);
   scrollDown();
 }
