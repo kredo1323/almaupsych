@@ -73,6 +73,20 @@ body {
 }
 .btn-nav:hover { background: var(--green-mid)!important; transform: translateY(-1px); }
 
+/* Mobile nav auth buttons — hidden on desktop */
+.nav-mobile-auth { display: none; align-items: center; gap: .5rem; }
+.btn-nav-mobile-login {
+  color: var(--green-dark); text-decoration: none;
+  font-size: .875rem; font-weight: 600; padding: .4rem .75rem;
+  border-radius: 50px; border: 1.5px solid var(--green-dark);
+  white-space: nowrap;
+}
+.btn-nav-mobile-reg {
+  background: var(--green-dark); color: white; text-decoration: none;
+  font-size: .875rem; font-weight: 600; padding: .4rem .9rem;
+  border-radius: 50px; white-space: nowrap;
+}
+
 /* ===== BUTTONS ===== */
 .btn {
   display: inline-flex; align-items: center; gap: 0.5rem;
@@ -459,6 +473,7 @@ footer p { font-size: 0.9rem; }
   .steps { grid-template-columns: 1fr; }
   .psych-grid { grid-template-columns: 1fr; }
   .nav-links { display: none; }
+  .nav-mobile-auth { display: flex; align-items: center; gap: .5rem; }
   .hero { padding: 6rem 1.25rem 3rem; }
   .section { padding: 3rem 1.25rem; }
   .hero-actions { flex-direction: column; }
@@ -524,10 +539,20 @@ footer p { font-size: 0.9rem; }
   .day-btn .day-name { font-size: .6rem; }
   .day-btn .day-avail { font-size: .6rem; }
 
-  /* Chat */
+  /* Chat — full screen on mobile */
   .chat-layout { grid-template-columns: 1fr; height: auto !important; }
   .chat-list { display: block; border-right: none; border-bottom: 1px solid var(--gray-200); max-height: 200px; }
   .chat-main { height: calc(100vh - 340px); min-height: 300px; }
+  /* Make chat page fill viewport properly */
+  body:has(#chat-area) .app-layout { height: 100dvh; overflow: hidden; }
+  body:has(#chat-area) .main-content { height: 100dvh; overflow: hidden; padding-bottom: 0 !important; }
+  body:has(#chat-area) #chat-area {
+    flex: 1; min-height: 0; overflow: hidden;
+    /* padding pushes inner height:100% content above bottom nav */
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+  /* Messages padding */
+  .chat-messages { padding: 1rem; }
 
   /* Schedule table */
   .sched-outer { font-size: .72rem; }
