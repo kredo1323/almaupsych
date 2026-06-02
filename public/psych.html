@@ -91,26 +91,106 @@
 
     /* ── MOBILE OVERRIDES ── */
     @media (max-width: 768px) {
+      /* === Tabs === */
       .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; scrollbar-width: none; margin-bottom: 1rem; }
       .tabs::-webkit-scrollbar { display: none; }
       .tab-btn { padding: .75rem 1rem; font-size: .85rem; }
       .tab-panel.active { display: block; }
+
+      /* === Chat tab === */
       #tab-chat { height: calc(100dvh - 170px) !important; }
       .chat-layout { grid-template-columns: 1fr !important; height: 100% !important; }
       .chat-list { max-height: 40vh; border-right: none; border-bottom: 1px solid var(--gray-200); }
       .chat-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+      /* === Modal === */
       .modal-overlay { align-items: flex-end; }
       .modal { border-radius: 16px 16px 0 0; width: 100%; max-width: 100%; margin: 0; padding: 1.5rem 1.25rem; }
-      .tpl-bar { gap: .4rem; padding: .75rem 1rem; }
-      .tpl-btn { padding: .3rem .75rem; font-size: .75rem; min-height: 36px; }
-      .week-nav { flex-wrap: wrap; gap: .5rem; }
+
+      /* === Schedule tab — hide desktop table, show mobile view === */
+      #sched-desktop { display: none !important; }
+      #sched-mobile { display: block; }
+      .tpl-bar { display: none; } /* replaced by quick-fill buttons in mobile view */
+      .legend { display: none; }
+      .week-nav { flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
       .week-nav-label { font-size: .85rem; }
-      .week-nav-btn { padding: .4rem .75rem; font-size: .82rem; }
-      .legend { gap: .75rem; margin-bottom: 1rem; }
-      .legend-item { font-size: .75rem; }
+      .week-nav-btn { padding: .4rem .75rem; font-size: .82rem; min-height: 40px; }
+
+      /* === Day picker chips === */
+      .mob-day-picker {
+        display: flex; gap: .5rem; padding: .75rem 1rem;
+        overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+        border-bottom: 1px solid var(--gray-200);
+      }
+      .mob-day-picker::-webkit-scrollbar { display: none; }
+      .mob-day-chip {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        min-width: 52px; padding: .6rem .5rem; gap: .1rem;
+        border-radius: 14px; border: 2px solid var(--gray-200);
+        background: white; cursor: pointer; transition: all .2s; flex-shrink: 0;
+      }
+      .mob-day-chip.selected { background: var(--blue-dark); border-color: var(--blue-dark); color: white; }
+      .mob-day-chip.today:not(.selected) { border-color: var(--blue-light); color: var(--blue-dark); }
+      .mob-day-chip.past { opacity: .45; }
+      .mob-chip-name { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+      .mob-chip-num { font-size: 1.2rem; font-weight: 800; line-height: 1.1; }
+      .mob-chip-dot { width: 5px; height: 5px; border-radius: 50%; background: #22c55e; margin-top: .2rem; }
+
+      /* === Day header === */
+      .mob-day-header { padding: .875rem 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+      .mob-day-title { font-size: 1rem; font-weight: 700; }
+      .mob-day-acts { display: flex; gap: .4rem; }
+      .mob-day-act {
+        padding: .35rem .75rem; border-radius: 50px;
+        border: 1.5px solid var(--gray-200); background: white;
+        font-size: .78rem; font-weight: 600; cursor: pointer; color: var(--blue-dark);
+        transition: all .2s; min-height: 36px;
+      }
+      .mob-day-act:active { background: var(--blue-pale); }
+
+      /* === Quick fill bar === */
+      .mob-fill-bar {
+        display: flex; gap: .4rem; padding: 0 1rem .75rem;
+        overflow-x: auto; scrollbar-width: none;
+      }
+      .mob-fill-bar::-webkit-scrollbar { display: none; }
+      .mob-fill-btn {
+        flex-shrink: 0; padding: .3rem .75rem; border-radius: 50px;
+        border: 1.5px solid var(--gray-200); background: white;
+        font-size: .75rem; font-weight: 600; cursor: pointer; color: var(--text-muted);
+        white-space: nowrap; transition: all .2s; min-height: 34px;
+      }
+      .mob-fill-btn:active { background: var(--blue-pale); color: var(--blue-dark); border-color: var(--blue-light); }
+
+      /* === Time slot tiles === */
+      .mob-slots-grid {
+        display: grid; grid-template-columns: repeat(2, 1fr);
+        gap: .625rem; padding: .75rem 1rem 1rem;
+      }
+      .mob-slot {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: .875rem .5rem; border-radius: 14px; border: 2px solid;
+        cursor: pointer; transition: all .15s; min-height: 68px; gap: .2rem;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mob-slot:active { transform: scale(.96); }
+      .mob-slot.open    { background: #dbeafe; border-color: #60a5fa; color: #1d4ed8; }
+      .mob-slot.today   { background: #dcfce7; border-color: #4ade80; color: #15803d; }
+      .mob-slot.closed  { background: var(--gray-50); border-color: var(--gray-200); color: var(--gray-400); }
+      .mob-slot.booked  { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; cursor: default; opacity: .85; }
+      .mob-slot-time    { font-size: 1.05rem; font-weight: 800; }
+      .mob-slot-label   { font-size: .7rem; font-weight: 600; }
+      .mob-past-msg { grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2.5rem 1rem; font-size: .9rem; }
+
+      /* === Other === */
       .mini-input { font-size: 16px !important; }
       .ov-row { flex-wrap: wrap; gap: .5rem; }
       .main-body { padding: .875rem; }
+    }
+
+    /* Desktop — hide mobile schedule container */
+    @media (min-width: 769px) {
+      #sched-mobile { display: none; }
     }
   </style>
 </head>
@@ -214,9 +294,12 @@
             </div>
           </div>
           <div class="card-body" style="padding:0">
-            <div class="sched-outer">
+            <!-- Desktop: full week table -->
+            <div class="sched-outer" id="sched-desktop">
               <table class="sched-table" id="sched-table"></table>
             </div>
+            <!-- Mobile: day-by-day view -->
+            <div id="sched-mobile"></div>
           </div>
         </div>
       </div>
@@ -284,6 +367,8 @@ let allAppts = [], myPsych = null, schedule = null;
 const todayDow = new Date().getDay();
 let schedWeekOffset = (todayDow === 0 || todayDow === 6) ? 1 : 0;
 let rescheduleId = null, activeApptId = null;
+// Mobile schedule: selected day index (0=Mon … 4=Fri)
+let mobileDayIndex = (todayDow >= 1 && todayDow <= 5) ? todayDow - 1 : 0;
 let pendingSlots = {};
 
 // ════ INIT ════
@@ -521,6 +606,9 @@ function getBookedForDate(dateStr) {
 }
 
 function renderSchedTable() {
+  // On mobile — use day-by-day view
+  if (window.innerWidth <= 768) { renderMobileSchedule(); return; }
+
   const today = new Date(); today.setHours(0,0,0,0);
   const todayStr = localDateStr(today);
   const days = getWeekDates(schedWeekOffset);
@@ -577,6 +665,112 @@ function renderSchedTable() {
   });
   html += `</tbody>`;
   document.getElementById('sched-table').innerHTML = html;
+}
+
+// ── MOBILE SCHEDULE: day-by-day view ──
+const DAYS_FULL_RU = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+const MONTHS_FULL_RU = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+function renderMobileSchedule() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = localDateStr(today);
+  const days = getWeekDates(schedWeekOffset);
+
+  // Update week label & nav buttons
+  const firstDay = days[0], lastDay = days[days.length-1];
+  document.getElementById('sched-week-label').textContent =
+    `${firstDay.getDate()} ${MONTHS_RU[firstDay.getMonth()]} — ${lastDay.getDate()} ${MONTHS_RU[lastDay.getMonth()]} ${lastDay.getFullYear()}`;
+  document.getElementById('sched-prev-btn').disabled = schedWeekOffset <= SCHED_MIN;
+  document.getElementById('sched-next-btn').disabled = schedWeekOffset >= SCHED_MAX;
+
+  // Clamp mobileDayIndex
+  if (mobileDayIndex >= days.length) mobileDayIndex = 0;
+
+  // Count open slots per day for dots
+  const dotMap = days.map(d => {
+    const ds = localDateStr(d);
+    return getEffectiveSlots(ds).size > 0;
+  });
+
+  // ── Day picker ──
+  let html = `<div class="mob-day-picker">`;
+  days.forEach((d, i) => {
+    const ds = localDateStr(d);
+    const isToday = ds === todayStr;
+    const isPast = d < today;
+    const isSelected = i === mobileDayIndex;
+    const hasSlots = dotMap[i];
+    html += `<button class="mob-day-chip${isSelected?' selected':''}${isToday&&!isSelected?' today':''}${isPast?' past':''}"
+      onclick="selectMobileDay(${i})" ${isPast?'disabled':''}>
+      <span class="mob-chip-name">${DAYS_RU[d.getDay()]}</span>
+      <span class="mob-chip-num">${d.getDate()}</span>
+      ${hasSlots && !isPast ? '<span class="mob-chip-dot"></span>' : '<span style="height:5px;margin-top:.2rem"></span>'}
+    </button>`;
+  });
+  html += `</div>`;
+
+  // ── Selected day ──
+  const selDay = days[mobileDayIndex];
+  const selDs = localDateStr(selDay);
+  const isPast = selDay < today;
+  const isToday = selDs === todayStr;
+  const booked = getBookedForDate(selDs);
+  const slots = getEffectiveSlots(selDs);
+
+  // Day header
+  html += `<div class="mob-day-header">
+    <div class="mob-day-title">${DAYS_FULL_RU[selDay.getDay()]}, ${selDay.getDate()} ${MONTHS_FULL_RU[selDay.getMonth()]}</div>
+    ${!isPast ? `<div class="mob-day-acts">
+      <button class="mob-day-act" onclick="openDay('${selDs}');renderSchedTable()">Открыть всё</button>
+      <button class="mob-day-act" onclick="closeDay('${selDs}');renderSchedTable()">Закрыть всё</button>
+    </div>` : ''}
+  </div>`;
+
+  // Quick-fill bar (only for non-past days)
+  if (!isPast) {
+    html += `<div class="mob-fill-bar">
+      <span style="font-size:.72rem;font-weight:700;color:var(--text-muted);align-self:center;flex-shrink:0;padding-right:.25rem">Вся неделя:</span>
+      <button class="mob-fill-btn" onclick="fillWeek('full');renderSchedTable()">📅 Все слоты</button>
+      <button class="mob-fill-btn" onclick="fillWeek('morning');renderSchedTable()">🌅 Утро</button>
+      <button class="mob-fill-btn" onclick="fillWeek('afternoon');renderSchedTable()">🌇 После обеда</button>
+      <button class="mob-fill-btn" onclick="fillWeek('clear');renderSchedTable()">🚫 Очистить</button>
+    </div>`;
+  }
+
+  // ── Time slot tiles ──
+  html += `<div class="mob-slots-grid">`;
+  if (isPast) {
+    html += `<div class="mob-past-msg">📅 Прошедший день — изменить слоты нельзя</div>`;
+  } else {
+    ALL_TIMES.forEach(time => {
+      const isBooked = booked.has(time);
+      const isOpen = slots.has(time);
+      let cls, label;
+      if (isBooked) {
+        cls = 'mob-slot booked';
+        label = 'занято';
+      } else if (isOpen) {
+        cls = isToday ? 'mob-slot today' : 'mob-slot open';
+        label = 'открыт';
+      } else {
+        cls = 'mob-slot closed';
+        label = 'закрыт';
+      }
+      const onclick = isBooked ? '' : `onclick="toggleSlot('${selDs}','${time}');renderSchedTable()"`;
+      html += `<button class="${cls}" ${onclick}>
+        <span class="mob-slot-time">${time}</span>
+        <span class="mob-slot-label">${label}</span>
+      </button>`;
+    });
+  }
+  html += `</div>`;
+
+  document.getElementById('sched-mobile').innerHTML = html;
+}
+
+function selectMobileDay(idx) {
+  mobileDayIndex = idx;
+  renderMobileSchedule();
 }
 
 function toggleSlot(dateStr, time) {
