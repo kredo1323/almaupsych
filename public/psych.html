@@ -88,9 +88,34 @@
     .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
     .modal-title{font-size:1.2rem;font-weight:700}
     .modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--gray-400)}
+
+    /* ── MOBILE OVERRIDES ── */
+    @media (max-width: 768px) {
+      .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; scrollbar-width: none; margin-bottom: 1rem; }
+      .tabs::-webkit-scrollbar { display: none; }
+      .tab-btn { padding: .75rem 1rem; font-size: .85rem; }
+      .tab-panel.active { display: block; }
+      #tab-chat { height: calc(100dvh - 170px) !important; }
+      .chat-layout { grid-template-columns: 1fr !important; height: 100% !important; }
+      .chat-list { max-height: 40vh; border-right: none; border-bottom: 1px solid var(--gray-200); }
+      .chat-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+      .modal-overlay { align-items: flex-end; }
+      .modal { border-radius: 16px 16px 0 0; width: 100%; max-width: 100%; margin: 0; padding: 1.5rem 1.25rem; }
+      .tpl-bar { gap: .4rem; padding: .75rem 1rem; }
+      .tpl-btn { padding: .3rem .75rem; font-size: .75rem; min-height: 36px; }
+      .week-nav { flex-wrap: wrap; gap: .5rem; }
+      .week-nav-label { font-size: .85rem; }
+      .week-nav-btn { padding: .4rem .75rem; font-size: .82rem; }
+      .legend { gap: .75rem; margin-bottom: 1rem; }
+      .legend-item { font-size: .75rem; }
+      .mini-input { font-size: 16px !important; }
+      .ov-row { flex-wrap: wrap; gap: .5rem; }
+      .main-body { padding: .875rem; }
+    }
   </style>
 </head>
 <body>
+<div class="sidebar-overlay" id="mob-overlay"></div>
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo"><a href="/psych.html">AlmauPsych<span style="color:#e57373">.</span></a></div>
@@ -110,13 +135,16 @@
 
   <div class="main-content">
     <div class="main-header">
-      <div class="page-title">Кабинет психолога</div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <button class="hamburger" onclick="openSidebar()"><span></span><span></span><span></span></button>
+        <div class="page-title">Кабинет психолога</div>
+      </div>
       <button onclick="logout()" class="btn btn-outline btn-sm">Выйти</button>
     </div>
     <div class="main-body">
 
       <!-- STATS -->
-      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:2rem">
+      <div class="stats-grid" style="margin-bottom:2rem">
         <div class="stat-box"><div class="stat-icon">⏳</div><div class="stat-num" id="st-pending">—</div><div class="stat-label">Ожидают</div></div>
         <div class="stat-box"><div class="stat-icon">✅</div><div class="stat-num" id="st-confirmed">—</div><div class="stat-label">Подтверждено</div></div>
         <div class="stat-box"><div class="stat-icon">📅</div><div class="stat-num" id="st-today">—</div><div class="stat-label">Сегодня</div></div>
@@ -194,7 +222,7 @@
       </div>
 
       <!-- ══ TAB: CHAT ══ -->
-      <div class="tab-panel" id="tab-chat" style="height:calc(100vh - 280px)">
+      <div class="tab-panel" id="tab-chat" style="height:calc(100dvh - 230px)">
         <div class="chat-layout" style="height:100%;border-radius:var(--radius);overflow:hidden;border:1.5px solid var(--gray-200)">
           <div class="chat-list">
             <div class="chat-list-header">Студенты</div>
