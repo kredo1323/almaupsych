@@ -77,8 +77,8 @@
     }
     .campus-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      grid-template-rows: 260px 260px;
+      grid-template-columns: 1.6fr 1fr;
+      grid-template-rows: 420px;
       gap: 0;
     }
     .campus-img {
@@ -101,11 +101,8 @@
       color: white; font-size: 0.88rem; font-weight: 500;
     }
     .campus-img:hover .campus-overlay { opacity: 1; }
-    .campus-img.large {
-      grid-column: span 2;
-      grid-row: span 2;
-    }
-    .campus-img.tall { grid-row: span 2; }
+    .campus-img.large { grid-column: 1; }
+    .campus-img.tall { grid-column: 2; }
 
     /* === FEATURES ROW === */
     .features-row {
@@ -322,10 +319,10 @@
     @media (max-width: 768px) {
       .campus-grid {
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: 180px 180px 180px;
+        grid-template-rows: 220px;
       }
-      .campus-img.large { grid-column: span 2; grid-row: span 1; }
-      .campus-img.tall { grid-row: span 1; }
+      .campus-img.large { grid-column: 1; }
+      .campus-img.tall { grid-column: 2; }
 
       .features-row { grid-template-columns: 1fr 1fr; }
       .feature-item { padding: 1.5rem 1rem; border-bottom: 1px solid var(--warm-200); }
@@ -357,7 +354,10 @@
 
 <!-- NAVBAR -->
 <nav class="navbar" id="navbar">
-  <a class="nav-logo" href="/">AlmauPsych<span style="color:var(--teal-600)">.</span></a>
+  <a class="nav-logo" href="/">
+    <img src="/pics/logo.png" alt="AlmaU" style="height:32px;width:auto;object-fit:contain">
+    <span>AlmauPsych<span style="color:var(--teal-600)">.</span></span>
+  </a>
   <div class="nav-links">
     <a href="#how">Как это работает</a>
     <a href="#about">О центре</a>
@@ -428,16 +428,12 @@
 <div class="campus-section">
   <div class="campus-grid">
     <div class="campus-img large">
-      <img src="https://images.unsplash.com/photo-1562774053-701939374585?w=900&q=80&auto=format&fit=crop" alt="Кампус университета" loading="lazy">
-      <div class="campus-overlay">Главный кампус AlmaU</div>
+      <img src="/pics/interior.jpg" alt="Главный зал AlmaU" loading="lazy">
+      <div class="campus-overlay">Главный корпус AlmaU · Knowledge Building</div>
     </div>
-    <div class="campus-img">
-      <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500&q=80&auto=format&fit=crop" alt="Студенты" loading="lazy">
-      <div class="campus-overlay">Студенческая жизнь</div>
-    </div>
-    <div class="campus-img">
-      <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80&auto=format&fit=crop" alt="Психологический кабинет" loading="lazy">
-      <div class="campus-overlay">Кабинет психолога</div>
+    <div class="campus-img tall">
+      <img src="/pics/building.jpg" alt="Здание Almaty Management University" loading="lazy">
+      <div class="campus-overlay">Almaty Management University · с 1988 года</div>
     </div>
   </div>
 </div>
