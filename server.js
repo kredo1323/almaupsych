@@ -171,6 +171,7 @@ app.post('/api/appointments', auth, (req, res) => {
   const id = nextId(db.appointments);
   db.appointments.push({ id, student_id: req.user.id, psychologist_id: psych.id, date, time, note: note || '', status: 'pending', created_at: new Date().toISOString() });
   saveDB(db);
+  io.emit('slots_updated'); // уведомляем дашборд и кабинет психолога
   res.json({ id, message: 'Запись создана' });
 });
 
@@ -200,10 +201,7 @@ app.patch('/api/appointments/:id', auth, (req, res) => {
   if (!appt) return res.status(404).json({ error: 'Не найдено' });
   appt.status = req.body.status;
   saveDB(db);
-  // Free the slot when cancelled or completed
-  if (req.body.status === 'cancelled' || req.body.status === 'completed') {
-    io.emit('slots_updated');
-  }
+  io.emit('slots_updated'); // любое изменение статуса — обновляем у всех
   res.json({ message: 'Обновлено' });
 });
 

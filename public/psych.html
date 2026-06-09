@@ -379,7 +379,7 @@ const MONTHS_RU = ['янв','фев','мар','апр','май','июн','июл
 const DAYS_RU   = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 
 const socket = io({ auth: { token: API.getToken() } });
-socket.on('slots_updated', () => { renderSchedTable(); });
+socket.on('slots_updated', () => { refreshAppts(); });
 
 let allAppts = [], myPsych = null, schedule = null;
 // If today is Sat/Sun — start from next week since current week is over
