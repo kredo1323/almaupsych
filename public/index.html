@@ -8,19 +8,363 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* ======== LANDING PAGE EXTRAS ======== */
+
+    /* Animated gradient hero bg */
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes floatUp {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-12px); }
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeSlideLeft {
+      from { opacity: 0; transform: translateX(28px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes pulse-dot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.5); opacity: 0.6; }
+    }
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scroll reveal */
+    .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-left { opacity: 0; transform: translateX(-32px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal-left.visible { opacity: 1; transform: translateX(0); }
+    .reveal-right { opacity: 0; transform: translateX(32px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+    /* Stagger delays */
+    .delay-1 { transition-delay: 0.1s; }
+    .delay-2 { transition-delay: 0.2s; }
+    .delay-3 { transition-delay: 0.3s; }
+    .delay-4 { transition-delay: 0.4s; }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(-45deg, #1E1248, #2D1F6E, #1a2a6e, #0D4A4F);
+      background-size: 400% 400%;
+      animation: gradientShift 12s ease infinite;
+    }
+    .hero-badge span { animation: pulse-dot 2s ease infinite; }
+    .hero-text { animation: fadeSlideUp 0.9s ease both; }
+    .hero-visual { animation: fadeSlideLeft 0.9s ease 0.2s both; }
+    .hero-visual .hero-card { animation: floatUp 5s ease-in-out infinite; }
+    .hero-visual .stats-row { animation: floatUp 5s ease-in-out 1.5s infinite; }
+
+    /* Navbar scroll effect */
+    .navbar.scrolled {
+      box-shadow: 0 2px 20px rgba(30,18,72,0.1);
+    }
+
+    /* === CAMPUS SECTION === */
+    .campus-section {
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .campus-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 260px 260px;
+      gap: 0;
+    }
+    .campus-img {
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+    }
+    .campus-img img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+      display: block;
+    }
+    .campus-img:hover img { transform: scale(1.06); }
+    .campus-img .campus-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(30,18,72,0.7) 0%, transparent 50%);
+      opacity: 0; transition: opacity 0.3s;
+      display: flex; align-items: flex-end; padding: 1.25rem;
+      color: white; font-size: 0.88rem; font-weight: 500;
+    }
+    .campus-img:hover .campus-overlay { opacity: 1; }
+    .campus-img.large {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+    .campus-img.tall { grid-row: span 2; }
+
+    /* === FEATURES ROW === */
+    .features-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border-top: 1px solid var(--warm-200);
+      border-bottom: 1px solid var(--warm-200);
+      background: white;
+    }
+    .feature-item {
+      padding: 2.25rem 1.75rem;
+      border-right: 1px solid var(--warm-200);
+      text-align: center;
+      transition: background var(--transition);
+    }
+    .feature-item:last-child { border-right: none; }
+    .feature-item:hover { background: var(--plum-50); }
+    .feature-icon {
+      font-size: 2rem; margin-bottom: 0.875rem;
+      display: block;
+    }
+    .feature-title {
+      font-family: var(--font-heading);
+      font-size: 1rem; font-weight: 700;
+      color: var(--text-900); margin-bottom: 0.4rem;
+    }
+    .feature-desc { font-size: 0.84rem; color: var(--text-500); line-height: 1.55; }
+
+    /* === STATS BAND === */
+    .stats-band {
+      background: linear-gradient(135deg, var(--plum-900), #2D1F6E);
+      padding: 3.5rem 2rem;
+      position: relative; overflow: hidden;
+    }
+    .stats-band::before {
+      content: '';
+      position: absolute; top: -50%; right: -10%;
+      width: 50%; height: 200%;
+      background: radial-gradient(ellipse, rgba(13,148,136,0.2) 0%, transparent 60%);
+    }
+    .stats-band-inner {
+      max-width: 1160px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 2rem; position: relative;
+    }
+    .stat-item { text-align: center; color: white; }
+    .stat-item .num {
+      font-family: var(--font-heading);
+      font-size: 2.8rem; font-weight: 700;
+      line-height: 1; margin-bottom: 0.4rem;
+      color: white;
+    }
+    .stat-item .num span { color: var(--teal-200); }
+    .stat-item .lbl { font-size: 0.88rem; opacity: 0.7; }
+
+    /* === HOW IT WORKS — enhanced === */
+    .how-bg { background: var(--warm-bg); }
+    .steps-enhanced {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      position: relative;
+    }
+    .steps-enhanced::before {
+      content: '';
+      position: absolute;
+      top: 48px; left: calc(16.66% + 1rem); right: calc(16.66% + 1rem);
+      height: 2px;
+      background: linear-gradient(to right, var(--plum-300), var(--teal-600), var(--plum-300));
+      z-index: 0;
+    }
+    .step-enhanced {
+      background: white; border-radius: var(--radius);
+      padding: 2rem 1.75rem;
+      text-align: center;
+      margin: 0 0.5rem;
+      box-shadow: var(--shadow-xs);
+      border: 1px solid var(--warm-200);
+      position: relative; z-index: 1;
+      transition: all var(--transition);
+    }
+    .step-enhanced:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+    .step-circle {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--plum-500), var(--plum-900));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading);
+      font-size: 1.2rem; font-weight: 700; color: white;
+      margin: 0 auto 1.25rem;
+      box-shadow: 0 4px 16px rgba(109,79,194,0.4);
+    }
+    .step-enhanced h3 {
+      font-family: var(--font-heading);
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--text-900); margin-bottom: 0.5rem;
+    }
+    .step-enhanced p { font-size: 0.88rem; color: var(--text-500); line-height: 1.6; }
+
+    /* === ABOUT CARDS — static === */
+    .about-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .about-card {
+      background: white; border-radius: var(--radius);
+      padding: 2rem; border: 1px solid var(--warm-200);
+      box-shadow: var(--shadow-xs);
+      transition: all var(--transition);
+      position: relative; overflow: hidden;
+    }
+    .about-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--plum-500), var(--teal-600));
+      transform: scaleX(0); transition: transform 0.3s ease;
+      transform-origin: left;
+    }
+    .about-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .about-card:hover::before { transform: scaleX(1); }
+    .about-icon {
+      width: 52px; height: 52px;
+      background: var(--plum-100); border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 1.25rem;
+    }
+    .about-card h3 {
+      font-family: var(--font-heading);
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--text-900); margin-bottom: 0.5rem;
+    }
+    .about-card p { font-size: 0.88rem; color: var(--text-500); line-height: 1.6; }
+
+    /* === TESTIMONIAL === */
+    .testimonial-section { background: var(--warm-bg); padding: 5rem 2rem; }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .testimonial-card {
+      background: white; border-radius: var(--radius);
+      padding: 1.75rem; border: 1px solid var(--warm-200);
+      box-shadow: var(--shadow-xs);
+      transition: all var(--transition);
+    }
+    .testimonial-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .testimonial-quote {
+      font-family: var(--font-heading);
+      font-size: 2.5rem; color: var(--plum-200, #D4C8F0);
+      line-height: 0.5; margin-bottom: 1rem;
+      display: block;
+    }
+    .testimonial-text {
+      font-size: 0.92rem; color: var(--text-700);
+      line-height: 1.65; margin-bottom: 1.25rem;
+      font-style: italic;
+      font-family: var(--font-heading);
+    }
+    .testimonial-author {
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .testimonial-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--plum-300), var(--plum-500));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.9rem; color: white;
+      font-family: var(--font-heading); flex-shrink: 0;
+    }
+    .testimonial-name { font-weight: 600; font-size: 0.88rem; color: var(--text-900); }
+    .testimonial-role { font-size: 0.78rem; color: var(--text-500); }
+
+    /* Trust badges */
+    .trust-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 2.5rem; flex-wrap: wrap;
+      padding: 2rem;
+      border-top: 1px solid var(--warm-200);
+      border-bottom: 1px solid var(--warm-200);
+    }
+    .trust-badge {
+      display: flex; align-items: center; gap: 0.6rem;
+      color: var(--text-500); font-size: 0.85rem; font-weight: 500;
+    }
+    .trust-badge .badge-icon { font-size: 1.2rem; }
+
+    /* CTA enhanced */
+    .cta-section { position: relative; overflow: hidden; }
+    .cta-inner { position: relative; z-index: 1; }
+    .cta-section .btn-light {
+      font-size: 1rem; padding: 0.9rem 2rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .cta-section .btn-light:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.2); }
+
+    /* Footer enhanced */
+    footer { background: var(--text-900); }
+    .footer-inner {
+      max-width: 1160px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 2.5rem; padding: 3rem 2rem 2rem;
+      text-align: left;
+    }
+    .footer-brand .footer-logo { font-family: var(--font-heading); }
+    .footer-brand p { font-size: 0.82rem; color: var(--text-300); margin-top: 0.5rem; line-height: 1.55; }
+    .footer-col h4 { font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.875rem; }
+    .footer-col a, .footer-col span { display: block; font-size: 0.85rem; color: var(--text-300); text-decoration: none; margin-bottom: 0.4rem; transition: color var(--transition); }
+    .footer-col a:hover { color: white; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.07); padding: 1.25rem 2rem; text-align: center; font-size: 0.8rem; color: var(--text-300); }
+
+    /* ======== MOBILE ======== */
+    @media (max-width: 768px) {
+      .campus-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 180px 180px 180px;
+      }
+      .campus-img.large { grid-column: span 2; grid-row: span 1; }
+      .campus-img.tall { grid-row: span 1; }
+
+      .features-row { grid-template-columns: 1fr 1fr; }
+      .feature-item { padding: 1.5rem 1rem; border-bottom: 1px solid var(--warm-200); }
+      .feature-item:nth-child(odd) { border-right: 1px solid var(--warm-200); }
+      .feature-item:nth-child(even) { border-right: none; }
+      .feature-item:nth-child(3), .feature-item:nth-child(4) { border-bottom: none; }
+
+      .stats-band-inner { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+      .stat-item .num { font-size: 2.2rem; }
+
+      .steps-enhanced { grid-template-columns: 1fr; gap: 0.875rem; }
+      .steps-enhanced::before { display: none; }
+      .step-enhanced { margin: 0; text-align: left; display: flex; gap: 1rem; align-items: flex-start; }
+      .step-circle { margin: 0; flex-shrink: 0; width: 44px; height: 44px; font-size: 1rem; }
+
+      .about-cards { grid-template-columns: 1fr; gap: 0.875rem; }
+
+      .testimonials-grid { grid-template-columns: 1fr; gap: 0.875rem; }
+
+      .trust-row { gap: 1.25rem; padding: 1.5rem 1rem; }
+      .trust-badge { font-size: 0.78rem; }
+
+      .footer-inner { grid-template-columns: 1fr; gap: 1.5rem; padding: 2rem 1.25rem 1.5rem; }
+      .footer-bottom { padding: 1rem 1.25rem; }
+    }
+  </style>
 </head>
 <body>
 
 <!-- NAVBAR -->
-<nav class="navbar">
-  <a class="nav-logo" href="/">AlmauPsych<span style="color:var(--red)">.</span></a>
+<nav class="navbar" id="navbar">
+  <a class="nav-logo" href="/">AlmauPsych<span style="color:var(--teal-600)">.</span></a>
   <div class="nav-links">
     <a href="#how">Как это работает</a>
-    <a href="#how">О центре</a>
+    <a href="#about">О центре</a>
+    <a href="#testimonials">Отзывы</a>
     <a href="/login.html">Войти</a>
     <a href="/register.html" class="btn-nav">Начать →</a>
   </div>
-  <!-- Mobile auth buttons -->
   <div class="nav-mobile-auth">
     <a href="/login.html" class="btn-nav-mobile-login">Войти</a>
     <a href="/register.html" class="btn-nav-mobile-reg">Начать →</a>
@@ -31,28 +375,31 @@
 <section class="hero">
   <div class="hero-content">
     <div class="hero-text">
-      <div class="hero-badge"><span style="background:#e57373"></span> Almaty Management University · с 1988 года</div>
-      <h1>Психологическая<br>помощь студентам <em>AlmaU</em></h1>
-      <p>Запись к психологу университета — онлайн, бесплатно, конфиденциально. Только для студентов и сотрудников AlmaU.</p>
+      <div class="hero-badge">
+        <span style="background:var(--teal-200)"></span>
+        Almaty Management University · с 1988 года
+      </div>
+      <h1>Психологическая<br>поддержка<br>студентов <em>AlmaU</em></h1>
+      <p>Запись к психологу университета — онлайн, бесплатно, конфиденциально. Только для студентов и сотрудников с почтой @almau.edu.kz</p>
       <div class="hero-actions">
-        <a href="/register.html" class="btn btn-light">Записаться к психологу</a>
-        <a href="#how" class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.5)">Как это работает</a>
+        <a href="/register.html" class="btn btn-light">Записаться к психологу →</a>
+        <a href="#how" class="btn btn-outline" style="color:rgba(255,255,255,0.85);border-color:rgba(255,255,255,0.3)">Как это работает</a>
       </div>
     </div>
     <div class="hero-visual">
       <div class="hero-card">
         <div class="hero-card-header">
-          <div class="avatar" style="background:rgba(255,255,255,0.2);color:white;font-size:1.5rem">🧠</div>
+          <div class="avatar" style="background:rgba(255,255,255,0.15);color:white;font-size:1.4rem">🧠</div>
           <div>
             <div class="hero-card-name">Психологический центр AlmaU</div>
             <div class="hero-card-tag">Квалифицированная помощь · Бесплатно</div>
           </div>
         </div>
-        <div class="hero-card-msg">«Здравствуйте! Мы готовы помочь вам. Запишитесь на удобное время — специалист встретит вас в назначенный день.»</div>
+        <div class="hero-card-msg">«Здравствуйте! Мы рады вам помочь. Запишитесь на удобное время — специалист ждёт вас в назначенный день.»</div>
       </div>
       <div class="stats-row">
         <div class="stat-card">
-          <div class="num">2</div>
+          <div class="num" data-count="2">0</div>
           <div class="label">психолога</div>
         </div>
         <div class="stat-card">
@@ -68,76 +415,296 @@
   </div>
 </section>
 
+<!-- TRUST BADGES -->
+<div class="trust-row">
+  <div class="trust-badge"><span class="badge-icon">🔒</span> Конфиденциально</div>
+  <div class="trust-badge"><span class="badge-icon">🎓</span> Только для @almau.edu.kz</div>
+  <div class="trust-badge"><span class="badge-icon">💬</span> Чат с психологом</div>
+  <div class="trust-badge"><span class="badge-icon">📅</span> Онлайн-запись</div>
+  <div class="trust-badge"><span class="badge-icon">✅</span> Бесплатно</div>
+</div>
+
+<!-- CAMPUS PHOTOS -->
+<div class="campus-section">
+  <div class="campus-grid">
+    <div class="campus-img large">
+      <img src="https://images.unsplash.com/photo-1562774053-701939374585?w=900&q=80&auto=format&fit=crop" alt="Кампус университета" loading="lazy">
+      <div class="campus-overlay">Главный кампус AlmaU</div>
+    </div>
+    <div class="campus-img">
+      <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500&q=80&auto=format&fit=crop" alt="Студенты" loading="lazy">
+      <div class="campus-overlay">Студенческая жизнь</div>
+    </div>
+    <div class="campus-img">
+      <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80&auto=format&fit=crop" alt="Психологический кабинет" loading="lazy">
+      <div class="campus-overlay">Кабинет психолога</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES ROW -->
+<div class="features-row">
+  <div class="feature-item reveal delay-1">
+    <span class="feature-icon">🔒</span>
+    <div class="feature-title">Полная конфиденциальность</div>
+    <div class="feature-desc">Ваши беседы никогда не передаются деканату или третьим лицам</div>
+  </div>
+  <div class="feature-item reveal delay-2">
+    <span class="feature-icon">📅</span>
+    <div class="feature-title">Удобное расписание</div>
+    <div class="feature-desc">Выбирайте время онлайн — утром, днём или вечером</div>
+  </div>
+  <div class="feature-item reveal delay-3">
+    <span class="feature-icon">💬</span>
+    <div class="feature-title">Чат с психологом</div>
+    <div class="feature-desc">Напишите вопрос заранее или сразу после встречи</div>
+  </div>
+  <div class="feature-item reveal delay-4">
+    <span class="feature-icon">🎓</span>
+    <div class="feature-title">Для всех студентов</div>
+    <div class="feature-desc">Бесплатно для любого студента и сотрудника AlmaU</div>
+  </div>
+</div>
+
+<!-- STATS BAND -->
+<div class="stats-band">
+  <div class="stats-band-inner">
+    <div class="stat-item reveal delay-1">
+      <div class="num"><span data-count="200">0</span>+</div>
+      <div class="lbl">студентов получили помощь</div>
+    </div>
+    <div class="stat-item reveal delay-2">
+      <div class="num"><span data-count="2">0</span></div>
+      <div class="lbl">опытных психолога</div>
+    </div>
+    <div class="stat-item reveal delay-3">
+      <div class="num"><span data-count="5">0</span> дней</div>
+      <div class="lbl">работаем в неделю</div>
+    </div>
+    <div class="stat-item reveal delay-4">
+      <div class="num">100%</div>
+      <div class="lbl">конфиденциально</div>
+    </div>
+  </div>
+</div>
+
 <!-- HOW IT WORKS -->
 <section class="section how-bg" id="how">
   <div class="section-inner">
-    <div class="section-header centered">
-      <div class="section-label">Просто и понятно</div>
+    <div class="section-header centered reveal">
+      <div class="section-label">Просто и быстро</div>
       <h2 class="section-title">Как получить помощь</h2>
-      <p class="section-sub">Три простых шага, чтобы начать работу с психологом</p>
+      <p class="section-sub">Три шага, чтобы начать работу с психологом университета</p>
     </div>
-    <div class="steps">
-      <div class="step-card">
-        <div class="step-num">1</div>
-        <h3>Зарегистрируйтесь</h3>
-        <p>Создайте аккаунт с вашей почтой @almau.edu.kz — только для студентов и сотрудников университета.</p>
-        <div class="step-connector">→</div>
+    <div class="steps-enhanced">
+      <div class="step-enhanced reveal delay-1">
+        <div class="step-circle">1</div>
+        <div>
+          <h3>Зарегистрируйтесь</h3>
+          <p>Создайте аккаунт с корпоративной почтой @almau.edu.kz — вход только для студентов и сотрудников.</p>
+        </div>
       </div>
-      <div class="step-card">
-        <div class="step-num">2</div>
-        <h3>Выберите психолога</h3>
-        <p>Ознакомьтесь с профилями специалистов и выберите удобное время для встречи.</p>
-        <div class="step-connector">→</div>
+      <div class="step-enhanced reveal delay-2">
+        <div class="step-circle">2</div>
+        <div>
+          <h3>Выберите время</h3>
+          <p>Посмотрите расписание психолога и выберите удобный день и время для встречи.</p>
+        </div>
       </div>
-      <div class="step-card">
-        <div class="step-num">3</div>
-        <h3>Общайтесь</h3>
-        <p>После подтверждения записи откроется чат — общайтесь в удобное время, всё конфиденциально.</p>
+      <div class="step-enhanced reveal delay-3">
+        <div class="step-circle">3</div>
+        <div>
+          <h3>Общайтесь</h3>
+          <p>После подтверждения открывается защищённый чат — пишите в любое время, всё конфиденциально.</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ABOUT -->
-<section class="section" id="psychologists">
+<!-- ABOUT SECTION -->
+<section class="section" id="about">
   <div class="section-inner">
-    <div class="section-header centered">
+    <div class="section-header centered reveal">
       <div class="section-label">О центре</div>
       <h2 class="section-title">Психологическая служба AlmaU</h2>
       <p class="section-sub">Профессиональная поддержка для каждого студента и сотрудника университета</p>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem" id="psych-grid">
-      <div class="loader"><div class="spinner"></div>Загрузка...</div>
+    <div class="about-cards">
+      <div class="about-card reveal delay-1">
+        <div class="about-icon">🔒</div>
+        <h3>Конфиденциальность</h3>
+        <p>Все беседы строго конфиденциальны. Информация не передаётся третьим лицам, деканату или родителям без вашего согласия.</p>
+      </div>
+      <div class="about-card reveal delay-2">
+        <div class="about-icon">🎓</div>
+        <h3>Только для AlmaU</h3>
+        <p>Сервис доступен только студентам и сотрудникам университета — вход возможен исключительно с корпоративной почтой @almau.edu.kz.</p>
+      </div>
+      <div class="about-card reveal delay-3">
+        <div class="about-icon">💬</div>
+        <h3>Чат после записи</h3>
+        <p>После подтверждения записи открывается защищённый чат с психологом — можно задать вопросы заранее или поддерживать контакт.</p>
+      </div>
+      <div class="about-card reveal delay-1">
+        <div class="about-icon">🌿</div>
+        <h3>Безопасное пространство</h3>
+        <p>Мы создаём среду без осуждения, где каждый студент может говорить открыто о своих переживаниях и трудностях.</p>
+      </div>
+      <div class="about-card reveal delay-2">
+        <div class="about-icon">⚡</div>
+        <h3>Быстрая запись</h3>
+        <p>Запись онлайн за несколько минут — без очередей, телефонных звонков и лишних формальностей.</p>
+      </div>
+      <div class="about-card reveal delay-3">
+        <div class="about-icon">🤝</div>
+        <h3>Опытные специалисты</h3>
+        <p>Квалифицированные психологи с опытом работы со студентами. Поддержка в академическом и личном пространстве.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonial-section" id="testimonials">
+  <div class="section-inner">
+    <div class="section-header centered reveal">
+      <div class="section-label">Отзывы</div>
+      <h2 class="section-title">Что говорят студенты</h2>
+      <p class="section-sub">Реальные истории студентов AlmaU</p>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card reveal delay-1">
+        <span class="testimonial-quote">"</span>
+        <p class="testimonial-text">Очень удобно — записался в приложении в 23:00, а на следующий день уже был на сессии. Психолог помогла разобраться с тревогой перед сессией.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">А</div>
+          <div>
+            <div class="testimonial-name">Асель М.</div>
+            <div class="testimonial-role">Студентка, 3 курс</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal delay-2">
+        <span class="testimonial-quote">"</span>
+        <p class="testimonial-text">Боялся, что информация попадёт к куратору. Но всё строго конфиденциально — это очень важно. Смог говорить открыто о своих проблемах.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">Д</div>
+          <div>
+            <div class="testimonial-name">Данияр К.</div>
+            <div class="testimonial-role">Студент, 2 курс</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal delay-3">
+        <span class="testimonial-quote">"</span>
+        <p class="testimonial-text">Удобный чат — можно написать психологу между встречами, если стало тяжело. Это очень поддерживает в трудные моменты.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">З</div>
+          <div>
+            <div class="testimonial-name">Зарина Т.</div>
+            <div class="testimonial-role">Студентка, 4 курс</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- CTA -->
 <section class="cta-section">
-  <h2>Начните путь к себе сегодня</h2>
-  <p>Записаться к психологу AlmaU — быстро и бесплатно</p>
-  <a href="/register.html" class="btn btn-light" style="font-size:1.1rem">Зарегистрироваться с @almau.edu.kz →</a>
+  <div class="cta-inner">
+    <h2>Начните путь к себе сегодня</h2>
+    <p>Записаться к психологу AlmaU — быстро, бесплатно и конфиденциально</p>
+    <a href="/register.html" class="btn btn-light">Зарегистрироваться с @almau.edu.kz →</a>
+  </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-logo">AlmauPsych<span style="color:var(--green-light)">.</span></div>
-  <p>Almaty Management University · Психологический центр · 2024</p>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">AlmauPsych<span style="color:var(--teal-600)">.</span></div>
+      <p>Психологическая служба Almaty Management University. Поддержка каждого студента и сотрудника.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Навигация</h4>
+      <a href="#how">Как это работает</a>
+      <a href="#about">О центре</a>
+      <a href="#testimonials">Отзывы</a>
+      <a href="/login.html">Войти</a>
+      <a href="/register.html">Регистрация</a>
+    </div>
+    <div class="footer-col">
+      <h4>Контакты</h4>
+      <span>Almaty Management University</span>
+      <span>г. Алматы, ул. Розыбакиева 227</span>
+      <span>psychology@almau.edu.kz</span>
+      <span>Пн–Пт, 9:00–18:00</span>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2024 AlmauPsych · Almaty Management University · Все данные конфиденциальны
+  </div>
 </footer>
 
 <script src="/js/api.js"></script>
 <script>
-  // Redirect if already logged in
+  // Redirect if logged in
   if (API.isLoggedIn()) {
-    const user = API.getUser();
-    window.location.href = user?.role === 'psychologist' ? '/psych.html' : '/dashboard.html';
+    const u = API.getUser();
+    window.location.href = u?.role === 'psychologist' ? '/psych.html' : '/dashboard.html';
   }
 
-  // About cards
-  const aboutCards = [
-    { icon: '🔒', title: 'Конфиденциальность', text: 'Все беседы строго конфиденциальны. Информация не передаётся третьим лицам, деканату или родителям без вашего согласия.' },
-    { icon: '🎓', title: 'Только для AlmaU', text: 'Сервис доступен только студентам и сотрудникам университета — войти можно только с корпоративной почтой @almau.edu.kz.' },
-    { icon: '💬', title: 'Чат после записи', text: 'После подтверждения записи открывается защищённый чат с психологом — можно задать вопросы заранее.' }
-  ];
-  document.getElementById('psych-grid').innerHTML = aboutCards.map(c => `
-    <di
+  // Navbar scroll effect
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  // Scroll reveal
+  const revealEls = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(el => observer.observe(el));
+
+  // Counter animation
+  function animateCount(el) {
+    const target = parseInt(el.dataset.count);
+    if (!target) return;
+    let current = 0;
+    const step = Math.max(1, Math.floor(target / 40));
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = current;
+      if (current >= target) clearInterval(timer);
+    }, 30);
+  }
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('[data-count]').forEach(animateCount);
+        counterObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.stat-card, .stat-item').forEach(el => counterObserver.observe(el));
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+</body>
+</html>
