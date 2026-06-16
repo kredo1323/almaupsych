@@ -133,6 +133,9 @@
 <script>
 if (!API.requireAuth('student')) {}
 
+// Socket must be initialized BEFORE using it below
+const socket = io({ auth: { token: API.getToken() } });
+
 const user = API.getUser();
 if (user) {
   document.getElementById('sb-name').textContent = user.name;
@@ -149,7 +152,6 @@ function openSidebar() { document.getElementById('sidebar').classList.add('open'
 function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
 
 // Real-time updates
-const socket = io({ auth: { token: API.getToken() } });
 socket.on('slots_updated', () => loadDashboard());
 
 // Chat badge logic — based on unread messages, not just confirmed appts

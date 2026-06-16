@@ -53,6 +53,21 @@ function emailBookingCreated(studentEmail, studentName, date, time) {
   );
 }
 
+function emailBookingToStudent(studentEmail, studentName, date, time) {
+  return sendEmail(
+    studentEmail,
+    'Ваша запись создана — AlmauPsych',
+    `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+      <h2 style="color:#1E1248">Запись создана ✅</h2>
+      <p>Привет, <strong>${studentName}</strong>!</p>
+      <p>Вы записались к психологу Almaty University.</p>
+      <p>📅 <strong>Дата:</strong> ${date}<br>🕐 <strong>Время:</strong> ${time}</p>
+      <p>Статус записи: <strong>Ожидает подтверждения</strong>. Вы получите уведомление, когда психолог подтвердит запись.</p>
+      <p><a href="https://almaupsych-production.up.railway.app/dashboard.html" style="background:#6D4FC2;color:white;padding:.75rem 1.5rem;border-radius:8px;text-decoration:none;display:inline-block">Открыть кабинет</a></p>
+    </div>`
+  );
+}
+
 function emailStatusChanged(studentEmail, status, date, time) {
   const labels = { confirmed: 'подтверждена ✅', cancelled: 'отменена ❌', completed: 'завершена 🎉' };
   const label = labels[status] || status;
@@ -138,9 +153,6 @@ function auth(req, res, next) {
 // ===== AUTH =====
 app.post('/api/register', (req, res) => {
   const { name, email, password } = req.body;
-  // TODO: раскомментировать для прода — только @almau.edu.kz
-  // if (!email || !email.endsWith('@almau.edu.kz'))
-  //   return res.status(400).json({ error: 'Только почта @almau.edu.kz' });
   if (!email || !email.includes('@'))
     return res.status(400).json({ error: 'Некорректный email' });
   db = loadDB();
@@ -169,13 +181,11 @@ app.post('/api/forgot-password', async (req, res) => {
   const { email } = req.body;
   db = loadDB();
   const user = db.users.find(u => u.email === email);
-  // Always respond OK to not reveal if email exists
   if (!user) return res.json({ message: 'Если такой email есть — письмо отправлено' });
 
   const token = require('crypto').randomBytes(32).toString('hex');
-  const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+  const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-  // Remove old tokens for this user
   db.reset_tokens = (db.reset_tokens || []).filter(t => t.user_id !== user.id);
   db.reset_tokens.push({ user_id: user.id, token, expires });
   saveDB(db);
@@ -222,7 +232,7 @@ app.get('/api/me', auth, (req, res) => {
   res.json(safe);
 });
 
-// ===== PSYCHOLOGIST PROFILE (always returns the single one) =====
+// ===== PSYCHOLOGIST PROFILE =====
 app.get('/api/my-psych-profile', auth, (req, res) => {
   db = loadDB();
   const psych = db.psychologists.find(p => p.user_id === req.user.id);
@@ -230,13 +240,12 @@ app.get('/api/my-psych-profile', auth, (req, res) => {
   res.json(psych);
 });
 
-// ===== AVAILABLE SLOTS (for booking page — live, not cached) =====
+// ===== AVAILABLE SLOTS =====
 app.get('/api/available-slots/:date', (req, res) => {
   db = loadDB();
   const { date } = req.params;
   const dow = new Date(date + 'T12:00:00').getDay();
 
-  // Get schedule for the one psychologist
   const psych = db.psychologists[0];
   if (!psych) return res.json({ available: [], booked: [] });
 
@@ -252,7 +261,6 @@ app.get('/api/available-slots/:date', (req, res) => {
     availTimes = [];
   }
 
-  // Only 'pending' and 'confirmed' appointments occupy a slot
   const bookedTimes = db.appointments
     .filter(a => a.psychologist_id === psych.id && a.date === date && (a.status === 'pending' || a.status === 'confirmed'))
     .map(a => a.time);
@@ -268,7 +276,6 @@ app.post('/api/appointments', auth, (req, res) => {
   const psych = db.psychologists[0];
   if (!psych) return res.status(500).json({ error: 'Психолог не найден' });
 
-  // Check slot is still free (real-time check)
   const conflict = db.appointments.find(a =>
     a.psychologist_id === psych.id && a.date === date && a.time === time &&
     a.status !== 'cancelled'
@@ -279,8 +286,8 @@ app.post('/api/appointments', auth, (req, res) => {
   db.appointments.push({ id, student_id: req.user.id, psychologist_id: psych.id, date, time, note: note || '', status: 'pending', created_at: new Date().toISOString() });
   saveDB(db);
   io.emit('slots_updated');
-  // Уведомляем психолога о новой записи
   emailBookingCreated(req.user.email, req.user.name, date, time);
+  emailBookingToStudent(req.user.email, req.user.name, date, time);
   res.json({ id, message: 'Запись создана' });
 });
 
@@ -293,7 +300,6 @@ app.get('/api/appointments', auth, (req, res) => {
       .sort((a, b) => b.date.localeCompare(a.date));
     res.json(appts);
   } else {
-    // Psychologist sees all
     const appts = db.appointments
       .map(a => {
         const su = db.users.find(u => u.id === a.student_id);
@@ -312,7 +318,6 @@ app.patch('/api/appointments/:id', auth, (req, res) => {
   appt.status = newStatus;
   saveDB(db);
   io.emit('slots_updated');
-  // Уведомляем студента о смене статуса
   if (['confirmed', 'cancelled', 'completed'].includes(newStatus)) {
     const student = db.users.find(u => u.id === appt.student_id);
     if (student) emailStatusChanged(student.email, newStatus, appt.date, appt.time);
@@ -320,14 +325,12 @@ app.patch('/api/appointments/:id', auth, (req, res) => {
   res.json({ message: 'Обновлено' });
 });
 
-// DELETE appointment → slot immediately freed
 app.delete('/api/appointments/:id', auth, (req, res) => {
   db = loadDB();
   const idx = db.appointments.findIndex(a => a.id === Number(req.params.id));
   if (idx < 0) return res.status(404).json({ error: 'Не найдено' });
   db.appointments.splice(idx, 1);
   saveDB(db);
-  // Notify clients that slots changed
   io.emit('slots_updated');
   res.json({ message: 'Удалено' });
 });
@@ -368,13 +371,11 @@ app.put('/api/schedule', auth, (req, res) => {
   const sched = { psychologist_id: psych.id, weekly: req.body.weekly, overrides: req.body.overrides || {} };
   if (idx >= 0) db.schedules[idx] = sched; else db.schedules.push(sched);
   saveDB(db);
-  io.emit('slots_updated'); // notify booking pages
+  io.emit('slots_updated');
   res.json({ message: 'Расписание сохранено' });
 });
 
-// ===== MESSAGES (per student, not per appointment) =====
-
-// Get all messages in a conversation with a student
+// ===== MESSAGES =====
 app.get('/api/chat/:student_id', auth, (req, res) => {
   db = loadDB();
   const sid = Number(req.params.student_id);
@@ -388,7 +389,6 @@ app.get('/api/chat/:student_id', auth, (req, res) => {
   res.json(msgs);
 });
 
-// Get list of students who have any appointment (for psychologist chat list)
 app.get('/api/chat-students', auth, (req, res) => {
   db = loadDB();
   const studentIds = [...new Set(db.appointments.map(a => a.student_id))];
@@ -405,7 +405,6 @@ app.get('/api/chat-students', auth, (req, res) => {
   res.json(students);
 });
 
-// Legacy endpoint kept for compatibility
 app.get('/api/messages/:appointment_id', auth, (req, res) => {
   res.json([]);
 });
@@ -419,12 +418,10 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
-  // Join a student-based chat room
   socket.on('join_student_chat', (student_id) => {
     socket.join(`schat_${student_id}`);
   });
 
-  // Send message in a student conversation
   socket.on('send_student_message', ({ student_id, text }) => {
     db = loadDB();
     const id = nextId(db.messages);
@@ -444,7 +441,6 @@ io.on('connection', (socket) => {
 });
 
 // ===== 404 =====
-// Only for HTML page requests (not API or static assets)
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/') || req.path.includes('.')) {
     return res.status(404).json({ error: 'Not found' });
