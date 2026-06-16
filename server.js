@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,13 +16,65 @@ const JWT_SECRET = process.env.JWT_SECRET || 'almau_psych_secret_2024';
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'db.json');
 
+// ===== EMAIL =====
+const emailTransporter = process.env.EMAIL_USER ? nodemailer.createTransport({
+  host: 'smtp.mail.ru',
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+}) : null;
+
+async function sendEmail(to, subject, html) {
+  if (!emailTransporter) return; // не настроено — молча пропускаем
+  try {
+    await emailTransporter.sendMail({
+      from: `"AlmauPsych" <${process.env.EMAIL_USER}>`,
+      to, subject, html
+    });
+  } catch(e) {
+    console.error('Email error:', e.message);
+  }
+}
+
+function emailBookingCreated(studentEmail, studentName, date, time) {
+  return sendEmail(
+    'psych@almau.edu.kz',
+    `Новая запись — ${studentName}`,
+    `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+      <h2 style="color:#1E1248">Новая запись к психологу</h2>
+      <p>Студент <strong>${studentName}</strong> (${studentEmail}) записался на приём.</p>
+      <p>📅 <strong>Дата:</strong> ${date}<br>🕐 <strong>Время:</strong> ${time}</p>
+      <p>Войдите в <a href="https://almau-psych.up.railway.app/psych.html">кабинет психолога</a>, чтобы подтвердить или отклонить запись.</p>
+    </div>`
+  );
+}
+
+function emailStatusChanged(studentEmail, status, date, time) {
+  const labels = { confirmed: 'подтверждена ✅', cancelled: 'отменена ❌', completed: 'завершена 🎉' };
+  const label = labels[status] || status;
+  return sendEmail(
+    studentEmail,
+    `Ваша запись ${label}`,
+    `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+      <h2 style="color:#1E1248">Статус записи изменён</h2>
+      <p>Ваша запись на <strong>${date}</strong> в <strong>${time}</strong> — <strong>${label}</strong>.</p>
+      ${status === 'confirmed' ? '<p>Ждём вас! Если нужно — напишите в <a href="https://almau-psych.up.railway.app/chat.html">чат</a>.</p>' : ''}
+      ${status === 'cancelled' ? '<p>Вы можете <a href="https://almau-psych.up.railway.app/booking.html">записаться снова</a> на другое время.</p>' : ''}
+    </div>`
+  );
+}
+
 const ALL_TIMES = ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
 
 // ===== DATABASE =====
 function loadDB() {
-  if (!fs.existsSync(DB_FILE)) return { users: [], psychologists: [], appointments: [], messages: [], schedules: [] };
+  if (!fs.existsSync(DB_FILE)) return { users: [], psychologists: [], appointments: [], messages: [], schedules: [], reset_tokens: [] };
   const d = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
   if (!d.schedules) d.schedules = [];
+  if (!d.reset_tokens) d.reset_tokens = [];
   return d;
 }
 function saveDB(db) { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
@@ -107,6 +160,56 @@ app.post('/api/login', (req, res) => {
   res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
 });
 
+// ===== PASSWORD RESET =====
+app.post('/api/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  db = loadDB();
+  const user = db.users.find(u => u.email === email);
+  // Always respond OK to not reveal if email exists
+  if (!user) return res.json({ message: 'Если такой email есть — письмо отправлено' });
+
+  const token = require('crypto').randomBytes(32).toString('hex');
+  const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+
+  // Remove old tokens for this user
+  db.reset_tokens = (db.reset_tokens || []).filter(t => t.user_id !== user.id);
+  db.reset_tokens.push({ user_id: user.id, token, expires });
+  saveDB(db);
+
+  const APP_URL = process.env.APP_URL || 'https://almau-psych.up.railway.app';
+  const link = `${APP_URL}/reset-password.html?token=${token}`;
+  await sendEmail(
+    email,
+    'Сброс пароля — AlmauPsych',
+    `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+      <h2 style="color:#1E1248">Сброс пароля</h2>
+      <p>Вы запросили сброс пароля. Ссылка действительна 1 час.</p>
+      <p><a href="${link}" style="background:#6D4FC2;color:white;padding:.75rem 1.5rem;border-radius:8px;text-decoration:none;display:inline-block">Сбросить пароль</a></p>
+      <p style="color:#888;font-size:.85rem">Если вы не запрашивали сброс — просто проигнорируйте это письмо.</p>
+    </div>`
+  );
+  res.json({ message: 'Если такой email есть — письмо отправлено' });
+});
+
+app.post('/api/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password || password.length < 6)
+    return res.status(400).json({ error: 'Неверные данные' });
+
+  db = loadDB();
+  const record = (db.reset_tokens || []).find(t => t.token === token);
+  if (!record || new Date(record.expires) < new Date())
+    return res.status(400).json({ error: 'Ссылка недействительна или истекла' });
+
+  const user = db.users.find(u => u.id === record.user_id);
+  if (!user) return res.status(400).json({ error: 'Пользователь не найден' });
+
+  user.password = bcrypt.hashSync(password, 10);
+  db.reset_tokens = db.reset_tokens.filter(t => t.token !== token);
+  saveDB(db);
+  res.json({ message: 'Пароль обновлён' });
+});
+
 app.get('/api/me', auth, (req, res) => {
   db = loadDB();
   const user = db.users.find(u => u.id === req.user.id);
@@ -171,7 +274,9 @@ app.post('/api/appointments', auth, (req, res) => {
   const id = nextId(db.appointments);
   db.appointments.push({ id, student_id: req.user.id, psychologist_id: psych.id, date, time, note: note || '', status: 'pending', created_at: new Date().toISOString() });
   saveDB(db);
-  io.emit('slots_updated'); // уведомляем дашборд и кабинет психолога
+  io.emit('slots_updated');
+  // Уведомляем психолога о новой записи
+  emailBookingCreated(req.user.email, req.user.name, date, time);
   res.json({ id, message: 'Запись создана' });
 });
 
@@ -199,9 +304,15 @@ app.patch('/api/appointments/:id', auth, (req, res) => {
   db = loadDB();
   const appt = db.appointments.find(a => a.id === Number(req.params.id));
   if (!appt) return res.status(404).json({ error: 'Не найдено' });
-  appt.status = req.body.status;
+  const newStatus = req.body.status;
+  appt.status = newStatus;
   saveDB(db);
-  io.emit('slots_updated'); // любое изменение статуса — обновляем у всех
+  io.emit('slots_updated');
+  // Уведомляем студента о смене статуса
+  if (['confirmed', 'cancelled', 'completed'].includes(newStatus)) {
+    const student = db.users.find(u => u.id === appt.student_id);
+    if (student) emailStatusChanged(student.email, newStatus, appt.date, appt.time);
+  }
   res.json({ message: 'Обновлено' });
 });
 
@@ -326,6 +437,15 @@ io.on('connection', (socket) => {
       ...msg, sender_name: u?.name, sender_role: u?.role
     });
   });
+});
+
+// ===== 404 =====
+// Only for HTML page requests (not API or static assets)
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/') || req.path.includes('.')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
 server.listen(PORT, () => {

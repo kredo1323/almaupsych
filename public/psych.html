@@ -254,6 +254,7 @@
         <button class="tab-btn active" onclick="switchTab('appointments',this)">📋 Записи <span id="pending-badge" style="display:none;background:#f97316;color:white;border-radius:50px;padding:.1rem .5rem;font-size:.72rem;font-weight:700;margin-left:.35rem"></span></button>
         <button class="tab-btn" onclick="switchTab('schedule',this)">🗓 Расписание</button>
         <button class="tab-btn" onclick="switchTab('chat',this)">💬 Чаты</button>
+        <button class="tab-btn" onclick="switchTab('analytics',this)">📊 Аналитика</button>
       </div>
 
       <!-- ══ TAB: APPOINTMENTS ══ -->
@@ -319,6 +320,13 @@
             <!-- Mobile: day-by-day view -->
             <div id="sched-mobile"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: ANALYTICS ══ -->
+      <div class="tab-panel" id="tab-analytics">
+        <div id="analytics-content">
+          <div class="loader"><div class="spinner"></div>Загрузка...</div>
         </div>
       </div>
 
@@ -442,6 +450,155 @@ function switchTab(name, btn) {
   document.getElementById(`tab-${name}`).classList.add('active');
   if (name==='chat') loadChats();
   if (name==='schedule') renderSchedTable();
+  if (name==='analytics') renderAnalytics();
+}
+
+// ════ ANALYTICS ════
+function renderAnalytics() {
+  const el = document.getElementById('analytics-content');
+  const appts = allAppts.filter(a => a.status !== 'cancelled');
+  const completed = allAppts.filter(a => a.status === 'completed');
+  const uniqueStudents = new Set(appts.map(a => a.student_id)).size;
+  const completionRate = appts.length ? Math.round(completed.length / appts.length * 100) : 0;
+
+  // Sessions by month (last 6 months)
+  const monthCounts = {};
+  const MONTHS_SHORT = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+  appts.forEach(a => {
+    const [y, m] = a.date.split('-');
+    const key = `${y}-${m}`;
+    monthCounts[key] = (monthCounts[key] || 0) + 1;
+  });
+  // Get last 6 months
+  const today = new Date();
+  const last6 = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    last6.push({ key, label: MONTHS_SHORT[d.getMonth()], count: monthCounts[key] || 0 });
+  }
+  const maxMonthCount = Math.max(...last6.map(m => m.count), 1);
+
+  // Busiest days of week
+  const dowCounts = [0,0,0,0,0,0,0];
+  appts.forEach(a => {
+    const [y,m,d] = a.date.split('-').map(Number);
+    const dow = new Date(y, m-1, d).getDay();
+    dowCounts[dow]++;
+  });
+  const maxDow = Math.max(...dowCounts, 1);
+  const DOW_LABELS = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+
+  // Peak hours
+  const hourCounts = {};
+  appts.forEach(a => {
+    const h = a.time?.split(':')[0] || '?';
+    hourCounts[h] = (hourCounts[h] || 0) + 1;
+  });
+  const sortedHours = Object.entries(hourCounts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  el.innerHTML = `
+    <!-- Summary cards -->
+    <div class="stats-grid" style="margin-bottom:2rem">
+      <div class="stat-box">
+        <div class="stat-icon">👥</div>
+        <div class="stat-num">${uniqueStudents}</div>
+        <div class="stat-label">Уникальных студентов</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon">📅</div>
+        <div class="stat-num">${appts.length}</div>
+        <div class="stat-label">Всего сессий</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon">✅</div>
+        <div class="stat-num">${completed.length}</div>
+        <div class="stat-label">Завершено</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-num">${completionRate}%</div>
+        <div class="stat-label">Процент завершения</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+      <!-- Sessions by month -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Сессии по месяцам</div></div>
+        <div class="card-body">
+          <div style="display:flex;align-items:flex-end;gap:.5rem;height:120px;padding-bottom:.5rem">
+            ${last6.map(m => `
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.35rem">
+                <span style="font-size:.72rem;font-weight:700;color:var(--plum-500)">${m.count || ''}</span>
+                <div style="flex:1;width:100%;display:flex;align-items:flex-end">
+                  <div style="width:100%;height:${Math.max(m.count/maxMonthCount*100, m.count?4:0)}%;background:${m.count?'var(--plum-500)':'var(--gray-200)'};border-radius:6px 6px 0 0;transition:height .4s;min-height:${m.count?'4px':'0'}"></div>
+                </div>
+                <span style="font-size:.72rem;color:var(--text-muted)">${m.label}</span>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Busiest days -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Загрузка по дням недели</div></div>
+        <div class="card-body">
+          ${DOW_LABELS.map((label, i) => `
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem">
+              <span style="font-size:.78rem;font-weight:700;color:var(--text-muted);min-width:22px">${label}</span>
+              <div style="flex:1;height:22px;background:var(--gray-100);border-radius:50px;overflow:hidden">
+                <div style="height:100%;width:${dowCounts[i]/maxDow*100}%;background:${i===0||i===6?'var(--gray-300)':'var(--teal-600)'};border-radius:50px;transition:width .4s"></div>
+              </div>
+              <span style="font-size:.78rem;font-weight:700;color:var(--text);min-width:18px;text-align:right">${dowCounts[i]}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Status breakdown + peak hours -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Статусы записей</div></div>
+        <div class="card-body">
+          ${[
+            { status:'pending',   label:'Ожидает',     color:'#f97316', count: allAppts.filter(a=>a.status==='pending').length },
+            { status:'confirmed', label:'Подтверждено', color:'#22c55e', count: allAppts.filter(a=>a.status==='confirmed').length },
+            { status:'completed', label:'Завершено',    color:'#8b5cf6', count: allAppts.filter(a=>a.status==='completed').length },
+            { status:'cancelled', label:'Отменено',     color:'#f43f5e', count: allAppts.filter(a=>a.status==='cancelled').length },
+          ].map(s => {
+            const pct = allAppts.length ? Math.round(s.count/allAppts.length*100) : 0;
+            return `<div style="margin-bottom:.875rem">
+              <div style="display:flex;justify-content:space-between;margin-bottom:.3rem">
+                <span style="font-size:.85rem;font-weight:600">${s.label}</span>
+                <span style="font-size:.85rem;color:var(--text-muted)">${s.count} (${pct}%)</span>
+              </div>
+              <div style="height:8px;background:var(--gray-100);border-radius:50px;overflow:hidden">
+                <div style="height:100%;width:${pct}%;background:${s.color};border-radius:50px;transition:width .5s"></div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Пиковые часы</div></div>
+        <div class="card-body">
+          ${sortedHours.length ? sortedHours.map(([h, c], i) => `
+            <div style="display:flex;align-items:center;gap:1rem;padding:.75rem 0;border-bottom:${i<sortedHours.length-1?'1px solid var(--gray-100)':'none'}">
+              <div style="width:40px;height:40px;border-radius:12px;background:var(--plum-50,#f5f3ff);color:var(--plum-500);font-weight:800;font-size:.85rem;display:flex;align-items:center;justify-content:center">${h}:00</div>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:.9rem">${h}:00 — ${h}:30</div>
+                <div style="font-size:.78rem;color:var(--text-muted)">${c} ${c===1?'сессия':c<5?'сессии':'сессий'}</div>
+              </div>
+              <span style="font-size:1.1rem">${i===0?'🥇':i===1?'🥈':'🥉'}</span>
+            </div>`).join('')
+          : `<div style="text-align:center;padding:2rem;color:var(--text-muted)">Нет данных о сессиях</div>`}
+          ${!allAppts.length ? `<div style="text-align:center;padding:2rem;color:var(--text-muted)">📊 Данные появятся после первых записей</div>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // ════ APPOINTMENTS ════

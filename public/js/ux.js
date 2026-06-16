@@ -174,6 +174,39 @@ document.addEventListener('DOMContentLoaded', () => {
   if (hamburger) hamburger.setAttribute('aria-label', 'Открыть меню');
 });
 
+// ── 12. OFFLINE РЕЖИМ — баннер при потере соединения ──
+(function offlineMode() {
+  const BANNER_ID = 'offline-banner';
+
+  function showOffline() {
+    if (document.getElementById(BANNER_ID)) return;
+    const banner = document.createElement('div');
+    banner.id = BANNER_ID;
+    banner.style.cssText = `
+      position:fixed;top:0;left:0;right:0;z-index:9999;
+      background:#1e1248;color:white;
+      padding:.7rem 1.5rem;font-size:.9rem;font-weight:600;
+      display:flex;align-items:center;justify-content:center;gap:.6rem;
+      animation:fadeInUp .3s ease;
+    `;
+    banner.innerHTML = '📡 Нет соединения с интернетом — некоторые функции недоступны';
+    document.body.prepend(banner);
+  }
+
+  function hideOffline() {
+    const b = document.getElementById(BANNER_ID);
+    if (b) {
+      b.style.animation = 'toastOut .25s ease forwards';
+      setTimeout(() => b.remove(), 280);
+    }
+    showToast && showToast('Соединение восстановлено ✅', 'success', 2500);
+  }
+
+  window.addEventListener('offline', showOffline);
+  window.addEventListener('online',  hideOffline);
+  if (!navigator.onLine) showOffline();
+})();
+
 // ── helper: getInitials (если не определена в другом скрипте) ──
 if (typeof getInitials === 'undefined') {
   window.getInitials = function(name) {

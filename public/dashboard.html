@@ -102,6 +102,30 @@
   </div>
 </div>
 
+<!-- Reschedule Modal -->
+<div id="reschedule-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:white;border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:420px;box-shadow:var(--shadow-lg)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+      <h3 style="font-size:1.1rem;font-weight:700">Перенести запись</h3>
+      <button onclick="closeReschedule()" style="background:none;border:none;cursor:pointer;font-size:1.3rem;color:var(--text-muted)">✕</button>
+    </div>
+    <div class="form-group" style="margin-bottom:1.25rem">
+      <label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:.4rem">Новая дата</label>
+      <input type="date" id="rs-date" style="width:100%;padding:.75rem 1rem;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:.95rem;box-sizing:border-box">
+    </div>
+    <div class="form-group" style="margin-bottom:1.5rem">
+      <label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:.4rem">Доступное время</label>
+      <div id="rs-slots" style="display:flex;flex-wrap:wrap;gap:.5rem;min-height:40px">
+        <span style="color:var(--text-muted);font-size:.85rem">Выберите дату</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:.75rem">
+      <button onclick="closeReschedule()" class="btn btn-outline" style="flex:1">Отмена</button>
+      <button onclick="submitReschedule()" class="btn btn-primary" style="flex:1" id="rs-submit-btn" disabled>Перенести</button>
+    </div>
+  </div>
+</div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/mobile.js"></script>
@@ -219,8 +243,9 @@ function renderCard(a) {
         ${a.note?`<div style="color:var(--text-muted);font-size:.8rem;margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📝 ${a.note}</div>`:''}
       </div>
       <span class="status-badge status-${a.status}">${statusLabel(a.status)}</span>
-      <div style="display:flex;gap:.5rem;flex-shrink:0">
+      <div style="display:flex;gap:.5rem;flex-shrink:0;flex-wrap:wrap">
         ${a.status==='confirmed'?`<a href="/chat.html" class="btn btn-success btn-sm">💬 Чат</a>`:''}
+        ${a.status==='pending'?`<button onclick="openReschedule(${a.id})" class="btn btn-outline btn-sm">📅 Перенести</button>`:''}
         ${a.status==='pending'?`<button onclick="cancelAppt(${a.id})" class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#fecaca">Отменить</button>`:''}
       </div>
     </div>`;
@@ -232,6 +257,80 @@ async function cancelAppt(id) {
   showToast('Запись отменена');
   loadDashboard();
 }
+
+// ── Reschedule ──
+let rsApptId = null;
+let rsSelectedTime = null;
+
+function openReschedule(apptId) {
+  rsApptId = apptId;
+  rsSelectedTime = null;
+  document.getElementById('rs-submit-btn').disabled = true;
+  document.getElementById('rs-slots').innerHTML = '<span style="color:var(--text-muted);font-size:.85rem">Выберите дату</span>';
+  // Min date = tomorrow
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const min = tomorrow.toISOString().split('T')[0];
+  const dateInput = document.getElementById('rs-date');
+  dateInput.min = min; dateInput.value = '';
+  const modal = document.getElementById('reschedule-modal');
+  modal.style.display = 'flex';
+}
+
+function closeReschedule() {
+  document.getElementById('reschedule-modal').style.display = 'none';
+  rsApptId = null; rsSelectedTime = null;
+}
+
+document.getElementById('rs-date').addEventListener('change', async function() {
+  const date = this.value;
+  if (!date) return;
+  const slotsEl = document.getElementById('rs-slots');
+  slotsEl.innerHTML = '<span style="color:var(--text-muted);font-size:.85rem">Загрузка...</span>';
+  rsSelectedTime = null;
+  document.getElementById('rs-submit-btn').disabled = true;
+  try {
+    const data = await API.get(`/api/available-slots/${date}`);
+    if (!data.available?.length) {
+      slotsEl.innerHTML = '<span style="color:var(--text-muted);font-size:.85rem">На эту дату нет свободных слотов</span>';
+      return;
+    }
+    slotsEl.innerHTML = data.available.map(t =>
+      `<button class="slot-chip" onclick="selectRsTime(this,'${t}')" style="padding:.4rem .85rem;border:1.5px solid var(--gray-200);border-radius:50px;font-size:.85rem;cursor:pointer;background:white;transition:all .15s">${t}</button>`
+    ).join('');
+  } catch(e) {
+    slotsEl.innerHTML = '<span style="color:#dc2626;font-size:.85rem">Ошибка загрузки слотов</span>';
+  }
+});
+
+function selectRsTime(btn, time) {
+  document.querySelectorAll('.slot-chip').forEach(c => {
+    c.style.background = 'white'; c.style.borderColor = 'var(--gray-200)'; c.style.color = 'var(--text)';
+  });
+  btn.style.background = 'var(--plum-500)'; btn.style.borderColor = 'var(--plum-500)'; btn.style.color = 'white';
+  rsSelectedTime = time;
+  document.getElementById('rs-submit-btn').disabled = false;
+}
+
+async function submitReschedule() {
+  if (!rsApptId || !rsSelectedTime) return;
+  const date = document.getElementById('rs-date').value;
+  const btn = document.getElementById('rs-submit-btn');
+  btn.classList.add('btn-loading'); btn.disabled = true;
+  try {
+    await API.patch(`/api/appointments/${rsApptId}/reschedule`, { date, time: rsSelectedTime });
+    closeReschedule();
+    showToast('Запись перенесена 📅');
+    loadDashboard();
+  } catch(e) {
+    showToast(e.message || 'Ошибка переноса', 'error');
+    btn.classList.remove('btn-loading'); btn.disabled = false;
+  }
+}
+
+// Close modal on backdrop click
+document.getElementById('reschedule-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeReschedule();
+});
 
 loadDashboard();
 </script>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Страница не найдена — AlmauPsych</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: var(--warm-bg);
+      padding: 2rem; text-align: center;
+    }
+    .container { max-width: 480px; }
+    .number {
+      font-size: 7rem; font-weight: 800; line-height: 1;
+      background: linear-gradient(135deg, var(--plum-500), var(--teal-600));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 1rem;
+      font-family: var(--font-heading);
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .emoji { font-size: 3rem; margin-bottom: 1rem; }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: .75rem; font-family: var(--font-heading); }
+    p { color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem; }
+    .actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="number">404</div>
+    <div class="emoji">🧭</div>
+    <h1>Страница не найдена</h1>
+    <p>Похоже, эта страница не существует или была удалена. Ничего страшного — давайте найдём правильный путь.</p>
+    <div class="actions">
+      <a href="/" class="btn btn-primary">🏠 На главную</a>
+      <a href="javascript:history.back()" class="btn btn-outline">← Назад</a>
+    </div>
+  </div>
+</body>
+</html>
