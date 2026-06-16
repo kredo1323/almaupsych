@@ -455,5 +455,3 @@ server.listen(PORT, () => {
   console.log(`\n🌿 AlmauPsych: http://localhost:${PORT}`);
   console.log(`   Психолог: psych@almau.edu.kz / psych2024\n`);
 });
-nsole.log(`   Психолог: psych@almau.edu.kz / psych2024\n`);
-});
