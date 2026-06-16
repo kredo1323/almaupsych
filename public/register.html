@@ -37,7 +37,7 @@
     <div class="auth-form-container">
       <div class="auth-logo">AlmauPsych<span class="dot">.</span></div>
       <h1>Создать аккаунт</h1>
-      <p class="subtitle">Только для почты @almau.edu.kz</p>
+      <p class="subtitle">Введите ваш email</p>
 
       <div class="error-msg" id="error-msg"></div>
       <div class="success-msg" id="success-msg"></div>
@@ -49,8 +49,8 @@
         </div>
         <div class="form-group">
           <label>Корпоративная почта</label>
-          <input type="email" id="email" placeholder="250111@almau.edu.kz" required>
-          <div class="hint">Только адреса @almau.edu.kz</div>
+          <input type="email" id="email" placeholder="your@email.com" required>
+          <div class="hint">Любой email адрес</div>
         </div>
         <div class="form-group">
           <label>Пароль</label>
@@ -91,7 +91,6 @@
 
     errEl.className = 'error-msg';
     if (password !== password2) { errEl.textContent = 'Пароли не совпадают'; errEl.className = 'error-msg show'; return; }
-    if (!email.endsWith('@almau.edu.kz')) { errEl.textContent = 'Используйте корпоративную почту @almau.edu.kz'; errEl.className = 'error-msg show'; return; }
 
     btn.textContent = 'Регистрация...'; btn.disabled = true;
     try {
