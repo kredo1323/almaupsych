@@ -371,6 +371,17 @@
   </div>
 </div>
 
+<!-- Hidden file input for psychologist chat -->
+<input type="file" id="psych-file-input" accept="image/*" style="display:none" onchange="psychHandleFile(event)">
+
+<!-- Image lightbox -->
+<div id="psych-lightbox" onclick="this.classList.remove('open')" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center">
+  <img id="psych-lightbox-img" src="" style="max-width:90vw;max-height:90vh;border-radius:12px">
+</div>
+<style>
+  #psych-lightbox.open { display:flex !important; }
+</style>
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/mobile.js"></script>
@@ -378,6 +389,18 @@
 <script>
 if (!API.requireAuth('psychologist')) {}
 const currentUser = API.getUser();
+
+// Push notifications
+if ('Notification' in window && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+function psychPushNotify(title, body) {
+  if (!('Notification' in window)) return;
+  if (document.visibilityState === 'visible' && document.getElementById('tab-chat')?.classList.contains('active')) return;
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '/pics/logo.png' });
+  }
+}
 function logout() { API.clearAuth(); window.location.href = '/'; }
 
 const ALL_TIMES = ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
@@ -1131,7 +1154,8 @@ async function openChat(studentId, studentName) {
       </div>` : ''}
     </div>
     <div class="chat-messages" id="pmsg"></div>
-    <div class="chat-input-area">
+    <div class="chat-input-area" style="gap:.5rem">
+      <button onclick="document.getElementById('psych-file-input').click()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.25rem;padding:.5rem;border-radius:8px;transition:color .2s" title="Прикрепить фото">📎</button>
       <textarea class="chat-input" id="pmsg-input" placeholder="Написать ${studentName}..." rows="1" onkeydown="handleKey(event)"></textarea>
       <button class="send-btn" onclick="sendMsg()">➤</button>
     </div>`;
@@ -1153,8 +1177,45 @@ function appendMsg(m) {
   document.querySelector('#pmsg div[style*="text-align:center"]')?.remove();
   const div = document.createElement('div');
   div.className = `msg ${isMine?'sent':'received'}`;
-  div.innerHTML = `<div class="msg-bubble">${escHtml(m.text)}</div><div class="msg-time">${isMine?'Вы':escHtml(m.sender_name)} · ${formatTime(m.created_at)}</div>`;
+
+  let content = '';
+  if (m.text && m.text.startsWith('__IMG__')) {
+    const src = m.text.slice(7);
+    content = `<img src="${src}" style="max-width:220px;border-radius:12px;cursor:pointer;display:block" onclick="document.getElementById('psych-lightbox-img').src='${src}';document.getElementById('psych-lightbox').classList.add('open')" alt="фото">`;
+  } else {
+    content = `<div class="msg-bubble">${escHtml(m.text)}</div>`;
+  }
+
+  div.innerHTML = `${content}<div class="msg-time">${isMine?'Вы':escHtml(m.sender_name)} · ${formatTime(m.created_at)}</div>`;
   el.appendChild(div); scrollDown();
+}
+
+// File upload for psychologist
+function psychHandleFile(event) {
+  const file = event.target.files[0];
+  if (!file || !activeChatStudentId) return;
+  if (!file.type.startsWith('image/')) { showToast('Только изображения', 'error'); return; }
+  if (file.size > 10 * 1024 * 1024) { showToast('Файл слишком большой (макс. 10 МБ)', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.75);
+      socket.emit('send_student_message', { student_id: activeChatStudentId, text: '__IMG__' + compressed });
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
 }
 function scrollDown() { const e=document.getElementById('pmsg'); if(e) e.scrollTop=e.scrollHeight; }
 function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); } }
@@ -1169,7 +1230,17 @@ socket.on('new_student_message', m => {
   if (m.student_id === activeChatStudentId) appendMsg(m);
   // Refresh chat list preview
   const ci = document.getElementById(`pci-${m.student_id}`);
-  if (ci) ci.querySelector('.chat-item-preview').textContent = m.text.slice(0,40);
+  if (ci) {
+    const preview = m.text.startsWith('__IMG__') ? '📷 Фото' : m.text.slice(0,40);
+    ci.querySelector('.chat-item-preview').textContent = preview;
+  }
+  // Notify psychologist if message is from student
+  if (m.sender_role === 'student') {
+    const studentName = m.sender_name || 'Студент';
+    const preview = m.text.startsWith('__IMG__') ? '📷 Прислал фото' : m.text.slice(0, 60);
+    psychPushNotify(`AlmauPsych — ${studentName}`, preview);
+    showToast(`💬 ${studentName}: ${preview.slice(0,40)}`, 'success', 4000);
+  }
 });
 
 // Auto-advance: refresh when day changes

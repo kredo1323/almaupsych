@@ -137,6 +137,8 @@ const user = API.getUser();
 if (user) {
   document.getElementById('sb-name').textContent = user.name;
   document.getElementById('sb-avatar').textContent = getInitials(user.name);
+  // Join socket room so we get new message notifications
+  socket.emit('join_student_chat', user.id);
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Доброе утро' : hour < 17 ? 'Добрый день' : 'Добрый вечер';
   document.getElementById('greeting').textContent = `${greeting}, ${user.name.split(' ')[0]} 👋`;
@@ -150,6 +152,42 @@ function closeSidebar() { document.getElementById('sidebar').classList.remove('o
 const socket = io({ auth: { token: API.getToken() } });
 socket.on('slots_updated', () => loadDashboard());
 
+// Chat badge logic — based on unread messages, not just confirmed appts
+function updateChatBadge() {
+  const badge = document.getElementById('chat-badge');
+  if (!badge) return;
+  const unread = localStorage.getItem('chat_unread') === '1';
+  badge.style.display = unread ? 'inline' : 'none';
+  badge.textContent = '●';
+}
+function clearChatBadge() {
+  localStorage.removeItem('chat_unread');
+  updateChatBadge();
+}
+
+// New message from psychologist → show badge on dashboard
+socket.on('new_student_message', (m) => {
+  const me = API.getUser();
+  // Show badge if message is NOT from the student themselves (i.e., from psychologist)
+  if (me && m.sender_id !== me.id) {
+    localStorage.setItem('chat_unread', '1');
+    updateChatBadge();
+    showToast('💬 Новое сообщение от психолога', 'success', 4000);
+    pushNotify('AlmauPsych', 'Новое сообщение от психолога');
+  }
+});
+
+function pushNotify(title, body) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '/pics/logo.png' });
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') new Notification(title, { body, icon: '/pics/logo.png' });
+    });
+  }
+}
+
 async function loadDashboard() {
   try {
     const appts = await API.get('/api/appointments');
@@ -162,10 +200,8 @@ async function loadDashboard() {
     document.getElementById('st-confirmed').textContent = appts.filter(a=>a.status==='confirmed').length;
     document.getElementById('st-done').textContent = appts.filter(a=>a.status==='completed').length;
 
-    // Chat badge — show if confirmed appointment exists
-    const hasChat = appts.some(a=>a.status==='confirmed');
-    const badge = document.getElementById('chat-badge');
-    if (hasChat) { badge.style.display='inline'; badge.textContent='●'; }
+    // Chat badge — show only if unread messages (set by socket)
+    updateChatBadge();
 
     // Upcoming appointments
     const upcoming = appts
@@ -244,8 +280,8 @@ function renderCard(a) {
       </div>
       <span class="status-badge status-${a.status}">${statusLabel(a.status)}</span>
       <div style="display:flex;gap:.5rem;flex-shrink:0;flex-wrap:wrap">
-        ${a.status==='confirmed'?`<a href="/chat.html" class="btn btn-success btn-sm">💬 Чат</a>`:''}
-        ${a.status==='pending'?`<button onclick="openReschedule(${a.id})" class="btn btn-outline btn-sm">📅 Перенести</button>`:''}
+        ${a.status==='confirmed'?`<a href="/chat.html" class="btn btn-success btn-sm" onclick="clearChatBadge()">💬 Чат</a>`:''}
+        ${(a.status==='pending'||a.status==='confirmed')?`<button onclick="openReschedule(${a.id})" class="btn btn-outline btn-sm">📅 Перенести</button>`:''}
         ${a.status==='pending'?`<button onclick="cancelAppt(${a.id})" class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#fecaca">Отменить</button>`:''}
       </div>
     </div>`;

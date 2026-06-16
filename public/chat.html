@@ -8,21 +8,46 @@
   <link rel="stylesheet" href="/css/style.css">
   <style>
     .appt-chips { display:flex; gap:.5rem; flex-wrap:wrap; padding:.75rem 1rem; background:var(--gray-50); border-bottom:1px solid var(--gray-200); }
-    .appt-chip {
-      display:flex; align-items:center; gap:.4rem;
-      background:white; border:1px solid var(--gray-200); border-radius:8px;
-      padding:.3rem .75rem; font-size:.78rem;
-    }
+    .appt-chip { display:flex; align-items:center; gap:.4rem; background:white; border:1px solid var(--gray-200); border-radius:8px; padding:.3rem .75rem; font-size:.78rem; }
     .appt-chip .chip-date { font-weight:700; color:var(--blue-dark); }
     .appt-chip .chip-time { color:var(--text-muted); }
-    .empty-chat {
-      flex:1; display:flex; flex-direction:column; align-items:center;
-      justify-content:center; text-align:center; padding:2rem; color:var(--text-muted);
-    }
+    .empty-chat { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem; color:var(--text-muted); }
     .empty-chat .icon { font-size:3rem; margin-bottom:1rem; }
+
+    /* File upload button */
+    .attach-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 1.25rem; padding: .5rem;
+      border-radius: 8px; transition: color .2s, background .2s;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .attach-btn:hover { color: var(--plum-500); background: var(--gray-100); }
+
+    /* Image messages */
+    .msg-image { max-width: 220px; border-radius: 12px; cursor: pointer; display: block; }
+    .msg-image:hover { opacity: .9; }
+
+    /* Image lightbox */
+    #img-lightbox {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85);
+      z-index: 9999; align-items: center; justify-content: center;
+    }
+    #img-lightbox.open { display: flex; }
+    #img-lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 12px; }
+    #img-lightbox-close {
+      position: fixed; top: 1rem; right: 1.25rem; color: white;
+      font-size: 2rem; cursor: pointer; background: none; border: none; z-index: 10000;
+    }
   </style>
 </head>
 <body>
+<!-- Image lightbox -->
+<div id="img-lightbox" onclick="closeLightbox()">
+  <button id="img-lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo"><a href="/dashboard.html">AlmauPsych<span style="color:#e57373">.</span></a></div>
@@ -52,7 +77,6 @@
       <button onclick="logout()" class="btn btn-outline btn-sm">Выйти</button>
     </div>
 
-    <!-- Chat area -->
     <div style="flex:1;overflow:hidden;display:flex;flex-direction:column" id="chat-area">
       <div class="empty-chat" id="empty-state">
         <div class="spinner"></div>
@@ -61,6 +85,9 @@
     </div>
   </div>
 </div>
+
+<!-- Hidden file input -->
+<input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/api.js"></script>
@@ -75,17 +102,30 @@ if (user) {
 }
 function logout() { API.clearAuth(); window.location.href = '/'; }
 
+// Clear unread badge since user is on chat page
+localStorage.removeItem('chat_unread');
+
 const socket = io({ auth: { token: API.getToken() } });
 let myStudentId = null;
+
+// Request notification permission
+if ('Notification' in window && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+
+function pushNotify(title, body) {
+  if (!('Notification' in window)) return;
+  if (document.visibilityState === 'visible') return; // already looking at it
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '/pics/logo.png' });
+  }
+}
 
 async function init() {
   const me = await API.get('/api/me');
   myStudentId = me.id;
-
-  // Join the student chat room
   socket.emit('join_student_chat', myStudentId);
 
-  // Load appointments
   const appts = await API.get('/api/appointments');
 
   if (!appts.length) {
@@ -99,11 +139,8 @@ async function init() {
     return;
   }
 
-  // Build chat UI
-  const area = document.getElementById('chat-area');
-  area.innerHTML = `
+  document.getElementById('chat-area').innerHTML = `
     <div style="display:flex;flex-direction:column;height:100%">
-      <!-- Psychologist header -->
       <div class="chat-header">
         <div class="avatar" style="width:44px;height:44px;background:var(--blue-pale);color:var(--blue-dark);font-weight:700;flex-shrink:0">П</div>
         <div class="chat-header-info">
@@ -111,8 +148,6 @@ async function init() {
           <div class="status"><span class="online-dot"></span>Психолог</div>
         </div>
       </div>
-
-      <!-- Appointments chips -->
       <div class="appt-chips">
         <span style="font-size:.78rem;font-weight:600;color:var(--text-muted);align-self:center;margin-right:.25rem">Ваши записи:</span>
         ${appts.map(a => `
@@ -122,18 +157,14 @@ async function init() {
             <span class="status-badge status-${a.status}" style="padding:.1rem .5rem;font-size:.7rem">${statusLabel(a.status)}</span>
           </div>`).join('')}
       </div>
-
-      <!-- Messages -->
       <div class="chat-messages" id="messages" style="flex:1"></div>
-
-      <!-- Input -->
-      <div class="chat-input-area">
+      <div class="chat-input-area" style="gap:.5rem">
+        <button class="attach-btn" onclick="document.getElementById('file-input').click()" title="Прикрепить фото">📎</button>
         <textarea class="chat-input" id="chat-input" placeholder="Написать психологу..." rows="1" onkeydown="handleKey(event)"></textarea>
         <button class="send-btn" onclick="sendMsg()">➤</button>
       </div>
     </div>`;
 
-  // Load message history
   const msgs = await API.get(`/api/chat/${myStudentId}`);
   const el = document.getElementById('messages');
   if (!msgs.length) {
@@ -147,7 +178,7 @@ async function init() {
 }
 
 function escHtml(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function appendMsg(m) {
@@ -156,9 +187,16 @@ function appendMsg(m) {
   const isMine = m.sender_id === (user?.id || myStudentId);
   const div = document.createElement('div');
   div.className = `msg ${isMine?'sent':'received'}`;
-  div.innerHTML = `
-    <div class="msg-bubble">${escHtml(m.text)}</div>
-    <div class="msg-time">${isMine?'Вы':escHtml(m.sender_name||'')} · ${formatTime(m.created_at)}</div>`;
+
+  let content = '';
+  if (m.text && m.text.startsWith('__IMG__')) {
+    const src = m.text.slice(7);
+    content = `<img src="${src}" class="msg-image" onclick="openLightbox('${src}')" alt="фото">`;
+  } else {
+    content = `<div class="msg-bubble">${escHtml(m.text)}</div>`;
+  }
+
+  div.innerHTML = `${content}<div class="msg-time">${isMine?'Вы':escHtml(m.sender_name||'')} · ${formatTime(m.created_at)}</div>`;
   el.appendChild(div);
   scrollDown();
 }
@@ -174,9 +212,64 @@ function sendMsg() {
   input.value = '';
 }
 
+// File / image upload
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('Поддерживаются только изображения', 'error'); return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('Файл слишком большой (макс. 10 МБ)', 'error'); return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    // Compress image to max 800px using canvas
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.75);
+      socket.emit('send_student_message', { student_id: myStudentId, text: '__IMG__' + compressed });
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  // Reset so same file can be re-selected
+  event.target.value = '';
+}
+
+// Lightbox
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('img-lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('img-lightbox').classList.remove('open');
+}
+
 socket.on('new_student_message', m => {
-  if (m.student_id === myStudentId) appendMsg(m);
+  if (m.student_id === myStudentId) {
+    appendMsg(m);
+    // Notify if page not focused and message is from psychologist
+    if (m.sender_id !== user?.id) {
+      pushNotify('AlmauPsych', '💬 Новое сообщение от психолога');
+    }
+  }
 });
+
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('mob-overlay')?.classList.add('open');
+}
 
 init();
 </script>

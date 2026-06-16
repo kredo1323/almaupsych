@@ -41,7 +41,7 @@ async function sendEmail(to, subject, html) {
 
 function emailBookingCreated(studentEmail, studentName, date, time) {
   return sendEmail(
-    'psych@almau.edu.kz',
+    process.env.EMAIL_USER || 'psych@almau.edu.kz',
     `Новая запись — ${studentName}`,
     `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">
       <h2 style="color:#1E1248">Новая запись к психологу</h2>
@@ -137,8 +137,11 @@ function auth(req, res, next) {
 // ===== AUTH =====
 app.post('/api/register', (req, res) => {
   const { name, email, password } = req.body;
-  if (!email || !email.endsWith('@almau.edu.kz'))
-    return res.status(400).json({ error: 'Только почта @almau.edu.kz' });
+  // TODO: раскомментировать для прода — только @almau.edu.kz
+  // if (!email || !email.endsWith('@almau.edu.kz'))
+  //   return res.status(400).json({ error: 'Только почта @almau.edu.kz' });
+  if (!email || !email.includes('@'))
+    return res.status(400).json({ error: 'Некорректный email' });
   db = loadDB();
   if (db.users.find(u => u.email === email))
     return res.status(400).json({ error: 'Email уже зарегистрирован' });
@@ -445,10 +448,11 @@ app.use((req, res, next) => {
   if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/') || req.path.includes('.')) {
     return res.status(404).json({ error: 'Not found' });
   }
-  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
 server.listen(PORT, () => {
   console.log(`\n🌿 AlmauPsych: http://localhost:${PORT}`);
   console.log(`   Психолог: psych@almau.edu.kz / psych2024\n`);
+});
+nsole.log(`   Психолог: psych@almau.edu.kz / psych2024\n`);
 });
