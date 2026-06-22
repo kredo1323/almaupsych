@@ -11,227 +11,293 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #F7F5F0;
-      --white: #FFFFFF;
-      --ink: #111111;
-      --ink-2: #444444;
-      --ink-3: #888888;
-      --accent: #1B4F3F;
-      --accent-light: #E8F2EE;
-      --line: #E2DDD6;
-      --font-body: 'Inter', system-ui, sans-serif;
-      --font-serif: 'Lora', Georgia, serif;
+      --bg:     #F7F5F0;
+      --white:  #FFFFFF;
+      --ink:    #111111;
+      --ink-2:  #555555;
+      --ink-3:  #999999;
+      --green:  #1B4F3F;
+      --green-dk: #14392d;
+      --line:   #D5D0C8;
+      --serif:  'Lora', Georgia, serif;
+      --sans:   'Inter', system-ui, sans-serif;
     }
 
     html { scroll-behavior: smooth; }
-    body {
-      font-family: var(--font-body);
-      background: var(--bg);
-      color: var(--ink);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-    }
-
+    body { font-family: var(--sans); background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
     a { color: inherit; text-decoration: none; }
     img { display: block; max-width: 100%; }
 
-    /* ── NAV ── */
+    /* ── NAV ─────────────────────────────────────────── */
     .nav {
-      position: sticky; top: 0; z-index: 100;
-      background: var(--bg);
-      border-bottom: 1px solid var(--line);
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 60px;
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 2.5rem;
-      height: 64px;
+      background: rgba(247,245,240,.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
     }
     .nav-logo {
-      font-family: var(--font-serif);
-      font-size: 1.15rem;
-      font-weight: 600;
-      letter-spacing: -.01em;
-      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 1.1rem; font-weight: 600;
       display: flex; align-items: center; gap: .5rem;
     }
-    .nav-logo img { height: 26px; width: auto; }
-    .nav-links {
-      display: flex; align-items: center; gap: 2rem;
-      font-size: .875rem; color: var(--ink-2);
-    }
+    .nav-logo img { height: 24px; width: auto; }
+    .nav-links { display: flex; align-items: center; gap: 2rem; font-size: .85rem; color: var(--ink-2); }
     .nav-links a:hover { color: var(--ink); }
-    .nav-links .nav-cta {
-      background: var(--ink);
-      color: white;
-      padding: .5rem 1.25rem;
-      border-radius: 100px;
-      font-weight: 500;
+    .nav-cta {
+      background: var(--ink); color: white !important;
+      padding: .45rem 1.2rem; border-radius: 100px;
+      font-weight: 500; font-size: .85rem;
       transition: background .2s;
     }
-    .nav-links .nav-cta:hover { background: var(--accent); }
-
-    /* mobile nav */
+    .nav-cta:hover { background: var(--green) !important; }
     .nav-mobile { display: none; gap: .5rem; }
     .nav-mobile a {
-      font-size: .82rem; font-weight: 500;
-      padding: .45rem .9rem; border-radius: 100px;
+      font-size: .8rem; font-weight: 500;
+      padding: .42rem .9rem; border-radius: 100px;
     }
     .nav-mobile .m-login { border: 1px solid var(--line); color: var(--ink-2); }
-    .nav-mobile .m-reg { background: var(--ink); color: white; }
+    .nav-mobile .m-reg   { background: var(--ink); color: white; }
 
-    /* ── HERO ── */
+    /* ── HERO ────────────────────────────────────────── */
     .hero {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      min-height: calc(100vh - 64px);
-      max-height: 780px;
+      position: relative;
+      height: 100svh; min-height: 600px;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding-top: 60px; /* nav height */
+      overflow: hidden;
     }
-    .hero-left {
-      display: flex; flex-direction: column; justify-content: center;
-      padding: 5rem 5rem 5rem 6rem;
+    .hero-bg {
+      position: absolute; inset: 0;
+      z-index: 0;
+    }
+    .hero-bg img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center 30%;
+    }
+    /* gradient overlay: clear top → dark bottom */
+    .hero-bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(10,25,20,.18) 0%,
+        rgba(10,25,20,.38) 40%,
+        rgba(10,25,20,.78) 75%,
+        rgba(10,25,20,.92) 100%
+      );
+    }
+    .hero-content {
+      position: relative; z-index: 1;
+      padding: 0 4rem 2.5rem;
+      max-width: 900px;
     }
     .hero-tag {
-      font-size: .75rem; font-weight: 600; letter-spacing: .1em;
-      text-transform: uppercase; color: var(--accent);
-      margin-bottom: 1.75rem;
+      font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+      color: rgba(185,215,200,.85);
+      margin-bottom: 1.25rem;
     }
-    .hero-title {
-      font-family: var(--font-serif);
-      font-size: clamp(2.5rem, 4vw, 3.75rem);
-      line-height: 1.15;
-      color: var(--ink);
-      margin-bottom: 1.5rem;
+    .hero-h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      line-height: 1.1;
+      color: white;
+      margin-bottom: 1.25rem;
     }
-    .hero-title em { font-style: italic; color: var(--accent); }
-    .hero-desc {
-      font-size: 1.0625rem; color: var(--ink-2);
-      max-width: 420px; line-height: 1.7;
-      margin-bottom: 2.5rem;
+    .hero-h1 .em { color: #9ad0af; font-style: italic; }
+    .hero-sub {
+      font-size: clamp(.9rem, 1.5vw, 1.05rem);
+      font-style: italic;
+      color: rgba(192,215,205,.9);
+      font-family: var(--serif);
+      margin-bottom: 2rem;
     }
-    .hero-actions { display: flex; gap: .875rem; align-items: center; flex-wrap: wrap; }
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: .5rem;
-      background: var(--ink); color: white;
-      padding: .8rem 1.75rem; border-radius: 100px;
-      font-size: .9375rem; font-weight: 500;
+    .btn-hero {
+      display: inline-flex; align-items: center;
+      background: white; color: var(--ink);
+      padding: .8rem 1.8rem; border-radius: 100px;
+      font-size: .9rem; font-weight: 600;
       transition: background .2s, transform .15s;
     }
-    .btn-primary:hover { background: var(--accent); transform: translateY(-1px); }
-    .btn-secondary {
-      display: inline-flex; align-items: center;
-      color: var(--ink-2); font-size: .9rem;
-      border-bottom: 1px solid transparent;
-      padding-bottom: 1px;
-      transition: color .2s, border-color .2s;
-    }
-    .btn-secondary:hover { color: var(--ink); border-color: var(--ink-2); }
+    .btn-hero:hover { background: #f0ece5; transform: translateY(-1px); }
 
-    .hero-note {
-      margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--line);
-      display: flex; gap: 2.5rem;
+    .hero-stats {
+      position: relative; z-index: 1;
+      display: flex; gap: 0;
+      border-top: 1px solid rgba(255,255,255,.15);
+      margin: 0 4rem;
     }
-    .hero-note-item { }
-    .hero-note-item .n { font-family: var(--font-serif); font-size: 1.75rem; font-weight: 600; color: var(--ink); }
-    .hero-note-item .l { font-size: .8rem; color: var(--ink-3); margin-top: .1rem; }
+    .hero-stat {
+      padding: 1.25rem 2.5rem 1.25rem 0;
+      margin-right: 2.5rem;
+    }
+    .hero-stat-num {
+      font-family: var(--serif);
+      font-size: 1.4rem; font-weight: 600; color: white;
+    }
+    .hero-stat-lbl {
+      font-size: .75rem; color: rgba(162,194,180,.85);
+      margin-top: .15rem;
+    }
 
-    .hero-right {
-      position: relative; overflow: hidden;
+    /* ── LIBRARY STRIP ───────────────────────────────── */
+    .alma-strip {
+      display: grid;
+      grid-template-columns: 60% 40%;
+      height: 420px;
+      border-top: 1px solid var(--line);
     }
-    .hero-right img {
+    .alma-strip-photo { overflow: hidden; }
+    .alma-strip-photo img {
       width: 100%; height: 100%;
       object-fit: cover; object-position: center;
     }
-
-    /* ── SECTION BASE ── */
-    .section { padding: 6rem 6rem; }
-    .section-inner { max-width: 1100px; margin: 0 auto; }
-    .section-label {
-      font-size: .75rem; font-weight: 600; letter-spacing: .1em;
-      text-transform: uppercase; color: var(--accent);
-      margin-bottom: 1rem;
+    .alma-strip-text {
+      background: var(--bg);
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 3rem 3.5rem;
+      border-left: 1px solid var(--line);
     }
-    .section-title {
-      font-family: var(--font-serif);
-      font-size: clamp(1.8rem, 3vw, 2.5rem);
+    .alma-h2 {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 3.5vw, 3.2rem);
+      line-height: 1.15; color: var(--ink);
+      margin-bottom: 1.5rem;
+    }
+    .alma-h2 .green { color: var(--green); font-style: normal; }
+    .alma-meta {
+      font-size: .8rem; color: var(--ink-3);
+      letter-spacing: .04em;
+      border-top: 1px solid var(--line);
+      padding-top: .9rem;
+    }
+
+    /* ── WHY ─────────────────────────────────────────── */
+    .why { background: var(--white); padding: 6rem 4rem; }
+    .sec-label {
+      font-size: .7rem; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--green); margin-bottom: .75rem;
+    }
+    .sec-rule {
+      width: 48px; height: 2px; background: var(--green);
+      margin-bottom: 2rem;
+    }
+    .sec-h2 {
+      font-family: var(--serif);
+      font-size: clamp(1.7rem, 3vw, 2.5rem);
       line-height: 1.2; color: var(--ink);
-      margin-bottom: 1rem;
+      margin-bottom: 4rem;
     }
-    .section-sub {
-      font-size: 1.0625rem; color: var(--ink-2); max-width: 560px;
-      line-height: 1.7;
-    }
-
-    /* ── PHOTO STRIP ── */
-    .photo-strip {
+    .why-cols {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      height: 420px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
     }
-    .photo-strip img { width: 100%; height: 100%; object-fit: cover; }
-    .photo-strip-right { overflow: hidden; }
-    .photo-strip-left { overflow: hidden; }
+    .why-col {
+      padding: 0 2.5rem 0 0;
+      border-left: 1px solid var(--line);
+      padding-left: 2rem;
+    }
+    .why-col:first-child { border-left: none; padding-left: 0; }
+    .why-num {
+      font-family: var(--serif);
+      font-size: 2.5rem; color: var(--line);
+      margin-bottom: 1.5rem;
+    }
+    .why-title {
+      font-size: 1.05rem; font-weight: 600; color: var(--ink);
+      line-height: 1.3; margin-bottom: .75rem;
+    }
+    .why-desc { font-size: .875rem; color: var(--ink-2); line-height: 1.7; }
 
-    /* ── WHY ── */
-    .why-section { background: var(--white); }
-    .why-grid {
+    /* ── HOW ─────────────────────────────────────────── */
+    .how { background: var(--bg); padding: 6rem 4rem; }
+    .how-steps {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 0;
       margin-top: 4rem;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      overflow: hidden;
     }
-    .why-item {
-      padding: 2.5rem 2rem;
-      border-right: 1px solid var(--line);
-    }
-    .why-item:last-child { border-right: none; }
-    .why-num {
-      font-family: var(--font-serif);
-      font-size: 2rem; font-weight: 600; color: var(--line);
-      margin-bottom: 1.25rem;
-    }
-    .why-title {
-      font-size: 1rem; font-weight: 600; color: var(--ink);
-      margin-bottom: .625rem;
-    }
-    .why-desc { font-size: .875rem; color: var(--ink-2); line-height: 1.65; }
-
-    /* ── HOW ── */
-    .how-section { background: var(--bg); }
-    .how-cols {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6rem;
-      align-items: center;
-      margin-top: 4rem;
-    }
-    .how-image { border-radius: 16px; overflow: hidden; }
-    .how-image img { width: 100%; height: 400px; object-fit: cover; }
-    .how-steps { display: flex; flex-direction: column; gap: 0; }
     .how-step {
-      display: flex; gap: 1.5rem;
-      padding: 1.75rem 0;
-      border-bottom: 1px solid var(--line);
+      padding-right: 3rem;
+      position: relative;
     }
-    .how-step:first-child { padding-top: 0; }
-    .how-step:last-child { border-bottom: none; padding-bottom: 0; }
-    .how-step-num {
-      flex-shrink: 0;
-      width: 32px; height: 32px;
-      border: 1.5px solid var(--line);
-      border-radius: 50%;
+    .how-step-top {
+      display: flex; align-items: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    .how-circle {
+      width: 56px; height: 56px; border-radius: 50%;
+      border: 1px solid var(--line);
       display: flex; align-items: center; justify-content: center;
-      font-size: .8125rem; font-weight: 600; color: var(--ink-3);
-      margin-top: .1rem;
+      font-size: .85rem; font-weight: 600; color: var(--ink-3);
+      flex-shrink: 0; background: var(--bg);
+      position: relative; z-index: 1;
     }
-    .how-step-body h3 { font-size: .9375rem; font-weight: 600; color: var(--ink); margin-bottom: .35rem; }
-    .how-step-body p { font-size: .875rem; color: var(--ink-2); line-height: 1.65; }
+    /* connector line between circles */
+    .how-step:not(:last-child) .how-step-top::after {
+      content: '';
+      position: absolute;
+      left: 56px; top: 50%;
+      width: calc(100% - 56px + 3rem);
+      height: 1px; background: var(--line);
+    }
+    .how-title {
+      font-family: var(--serif);
+      font-size: 1.1rem; font-weight: 600;
+      color: var(--ink); margin-bottom: .6rem;
+    }
+    .how-rule { width: 40px; height: 1px; background: var(--line); margin-bottom: .8rem; }
+    .how-desc { font-size: .875rem; color: var(--ink-2); line-height: 1.7; }
+    .how-cta { margin-top: 3.5rem; }
+    .btn-dark {
+      display: inline-flex; align-items: center;
+      background: var(--ink); color: white;
+      padding: .85rem 2rem; border-radius: 100px;
+      font-size: .9rem; font-weight: 600;
+      transition: background .2s, transform .15s;
+    }
+    .btn-dark:hover { background: var(--green); transform: translateY(-1px); }
 
-    /* ── TESTIMONIALS ── */
-    .testimonials-section { background: var(--accent); padding: 6rem; }
-    .testimonials-section .section-label { color: rgba(255,255,255,.5); }
-    .testimonials-section .section-title { color: white; }
-    .testimonials-section .section-sub { color: rgba(255,255,255,.65); }
+    /* ── STUDENTS BAND ───────────────────────────────── */
+    .students-band {
+      position: relative; height: 420px; overflow: hidden;
+    }
+    .students-band img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center top;
+    }
+    /* fade top and bottom edges */
+    .students-band::before,
+    .students-band::after {
+      content: ''; position: absolute; left: 0; right: 0; z-index: 1;
+      height: 100px;
+      pointer-events: none;
+    }
+    .students-band::before {
+      top: 0;
+      background: linear-gradient(to bottom, var(--bg), transparent);
+    }
+    .students-band::after {
+      bottom: 0;
+      background: linear-gradient(to top, var(--bg), transparent);
+    }
+    .students-caption {
+      position: absolute; bottom: 2.5rem; left: 4rem;
+      z-index: 2;
+      font-family: var(--serif);
+      font-size: 1.15rem; font-style: italic;
+      color: var(--ink-2);
+    }
+
+    /* ── TESTIMONIALS ────────────────────────────────── */
+    .testimonials { background: var(--green); padding: 6rem 4rem; }
+    .testimonials .sec-label { color: rgba(140,200,165,.8); }
+    .testimonials .sec-rule  { background: rgba(140,200,165,.8); }
+    .testimonials .sec-h2    { color: white; }
     .testi-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -239,106 +305,111 @@
       margin-top: 3.5rem;
     }
     .testi-card {
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 16px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 14px;
       padding: 2rem;
     }
-    .testi-text {
-      font-family: var(--font-serif);
-      font-size: 1rem; line-height: 1.7;
-      color: rgba(255,255,255,.9);
+    .testi-quote {
+      font-family: var(--serif);
       font-style: italic;
+      font-size: .975rem; line-height: 1.7;
+      color: rgba(215,235,225,.95);
       margin-bottom: 1.5rem;
     }
-    .testi-author { display: flex; align-items: center; gap: .75rem; }
-    .testi-avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255,255,255,.15);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 600; font-size: .875rem; color: white;
-      flex-shrink: 0;
-    }
-    .testi-name { font-size: .875rem; font-weight: 600; color: white; }
-    .testi-role { font-size: .775rem; color: rgba(255,255,255,.5); margin-top: .1rem; }
+    .testi-divider { width: 40px; height: 1px; background: rgba(80,140,108,.8); margin-bottom: 1rem; }
+    .testi-author { font-size: .8rem; color: rgba(100,165,132,.9); }
 
-    /* ── CTA ── */
-    .cta-section {
-      background: var(--white);
-      padding: 7rem 6rem;
-      text-align: center;
+    /* ── CTA ─────────────────────────────────────────── */
+    .cta { background: var(--white); padding: 7rem 4rem; text-align: center; }
+    .cta .sec-label { display: inline-block; }
+    .cta .sec-rule  { margin: .75rem auto 2rem; }
+    .cta-h2 {
+      font-family: var(--serif);
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      color: var(--ink); margin-bottom: 1rem;
     }
-    .cta-section .section-title { margin: 0 auto 1rem; max-width: 600px; }
-    .cta-section .section-sub { margin: 0 auto 2.5rem; }
-    .cta-divider {
-      width: 40px; height: 1.5px;
-      background: var(--accent); margin: 1.5rem auto;
+    .cta-sub {
+      font-family: var(--serif); font-style: italic;
+      font-size: 1.05rem; color: var(--ink-3);
+      margin-bottom: 2.5rem;
     }
-    .cta-note { font-size: .8125rem; color: var(--ink-3); margin-top: 1.25rem; }
+    .cta-note { font-size: .8rem; color: var(--ink-3); margin-top: 1rem; }
+    .cta-note a { color: var(--ink-2); text-decoration: underline; }
 
-    /* ── FOOTER ── */
-    footer {
-      background: var(--ink);
-      padding: 3.5rem 6rem 2.5rem;
-    }
+    /* ── FOOTER ──────────────────────────────────────── */
+    footer { background: #111; padding: 3.5rem 4rem 2rem; }
     .footer-top {
       display: grid; grid-template-columns: 1fr auto auto;
-      gap: 4rem; align-items: start;
-      padding-bottom: 3rem;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      margin-bottom: 2rem;
+      gap: 5rem; align-items: start;
+      padding-bottom: 2.5rem;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      margin-bottom: 1.75rem;
     }
-    .footer-brand-name {
-      font-family: var(--font-serif);
-      font-size: 1.1rem; color: white; font-weight: 600;
+    .footer-brand {
+      font-family: var(--serif);
+      font-size: 1.05rem; color: white; font-weight: 600;
       margin-bottom: .6rem;
     }
-    .footer-brand-desc { font-size: .8125rem; color: rgba(255,255,255,.4); line-height: 1.6; max-width: 260px; }
-    .footer-col h4 { font-size: .725rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.35); margin-bottom: 1rem; }
-    .footer-col a, .footer-col span {
-      display: block; font-size: .8125rem; color: rgba(255,255,255,.55);
-      margin-bottom: .5rem; transition: color .15s;
+    .footer-brand-sub {
+      font-size: .8rem; color: rgba(255,255,255,.35);
+      line-height: 1.6; max-width: 260px;
     }
-    .footer-col a:hover { color: white; }
+    .f-col h4 {
+      font-size: .68rem; font-weight: 600; letter-spacing: .1em;
+      text-transform: uppercase; color: rgba(255,255,255,.3);
+      margin-bottom: 1rem;
+    }
+    .f-col a, .f-col span {
+      display: block; font-size: .8rem;
+      color: rgba(255,255,255,.45); margin-bottom: .55rem;
+      transition: color .15s;
+    }
+    .f-col a:hover { color: white; }
     .footer-bottom {
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: .775rem; color: rgba(255,255,255,.3);
+      display: flex; justify-content: space-between;
+      font-size: .75rem; color: rgba(255,255,255,.25);
     }
 
-    /* ── MOBILE ── */
+    /* ── MOBILE ──────────────────────────────────────── */
     @media (max-width: 900px) {
       .nav { padding: 0 1.25rem; }
       .nav-links { display: none; }
       .nav-mobile { display: flex; }
 
-      .hero {
-        grid-template-columns: 1fr;
-        min-height: auto; max-height: none;
-      }
-      .hero-right { height: 280px; order: -1; }
-      .hero-left { padding: 2.5rem 1.5rem; }
-      .hero-note { gap: 1.5rem; }
+      .hero-content { padding: 0 1.5rem 2rem; }
+      .hero-stats   { margin: 0 1.5rem; gap: 0; }
+      .hero-stat    { padding: 1rem 1.5rem 1rem 0; margin-right: 1.5rem; }
+      .hero-stat:last-child { margin-right: 0; }
+      .hero-stat-num { font-size: 1.1rem; }
+      .hero-stat-lbl { font-size: .7rem; }
 
-      .section { padding: 4rem 1.5rem; }
+      .alma-strip { grid-template-columns: 1fr; height: auto; }
+      .alma-strip-photo { height: 260px; }
+      .alma-strip-text { border-left: none; border-top: 1px solid var(--line); padding: 2rem 1.5rem; }
+      .alma-h2 { font-size: 1.8rem; }
 
-      .photo-strip { grid-template-columns: 1fr; height: 260px; }
-      .photo-strip-right { display: none; }
+      .why  { padding: 4rem 1.5rem; }
+      .why-cols { grid-template-columns: 1fr; gap: 2.5rem; }
+      .why-col { border-left: none; padding-left: 0; border-top: 1px solid var(--line); padding-top: 2rem; }
+      .why-col:first-child { border-top: none; padding-top: 0; }
 
-      .why-grid { grid-template-columns: 1fr; border-radius: 12px; }
-      .why-item { border-right: none; border-bottom: 1px solid var(--line); }
-      .why-item:last-child { border-bottom: none; }
+      .how { padding: 4rem 1.5rem; }
+      .how-steps { grid-template-columns: 1fr; gap: 2rem; }
+      .how-step { padding-right: 0; }
+      .how-step-top::after { display: none; }
 
-      .how-cols { grid-template-columns: 1fr; gap: 2.5rem; }
-      .how-image { display: none; }
+      .students-band { height: 300px; }
+      .students-caption { left: 1.5rem; font-size: 1rem; }
 
-      .testimonials-section { padding: 4rem 1.5rem; }
+      .testimonials { padding: 4rem 1.5rem; }
       .testi-grid { grid-template-columns: 1fr; gap: 1rem; }
 
-      .cta-section { padding: 5rem 1.5rem; }
+      .cta { padding: 5rem 1.5rem; }
 
       footer { padding: 3rem 1.5rem 2rem; }
       .footer-top { grid-template-columns: 1fr; gap: 2rem; padding-bottom: 2rem; }
-      .footer-bottom { flex-direction: column; gap: .5rem; text-align: center; }
+      .footer-bottom { flex-direction: column; gap: .4rem; text-align: center; }
     }
   </style>
 </head>
@@ -362,182 +433,169 @@
   </div>
 </nav>
 
-<!-- HERO -->
+<!-- HERO: full-bleed photo + text overlay -->
 <section class="hero">
-  <div class="hero-left">
-    <div class="hero-tag">Almaty Management University · Психологическая служба</div>
-    <h1 class="hero-title">Поддержка, которая<br>нужна <em>каждому</em></h1>
-    <p class="hero-desc">Запись к психологу университета — онлайн, бесплатно и конфиденциально. Для студентов и сотрудников AlmaU.</p>
-    <div class="hero-actions">
-      <a href="/register.html" class="btn-primary">Записаться к психологу →</a>
-      <a href="#how" class="btn-secondary">Как это работает</a>
-    </div>
-    <div class="hero-note">
-      <div class="hero-note-item">
-        <div class="n">Пн–Пт</div>
-        <div class="l">Приём ведётся</div>
-      </div>
-      <div class="hero-note-item">
-        <div class="n">100%</div>
-        <div class="l">Конфиденциально</div>
-      </div>
-      <div class="hero-note-item">
-        <div class="n">0 ₸</div>
-        <div class="l">Бесплатно для AlmaU</div>
-      </div>
-    </div>
-  </div>
-  <div class="hero-right">
+  <div class="hero-bg">
     <img src="/pics/building2.jpg" alt="Almaty Management University" loading="eager">
+  </div>
+  <div class="hero-content">
+    <div class="hero-tag">ALMATY MANAGEMENT UNIVERSITY · ПСИХОЛОГИЧЕСКАЯ СЛУЖБА</div>
+    <h1 class="hero-h1">
+      Поддержка,<br>
+      которая нужна<br>
+      <span class="em">каждому.</span>
+    </h1>
+    <p class="hero-sub">Запись к психологу — онлайн, бесплатно, конфиденциально.</p>
+    <a href="/register.html" class="btn-hero">Записаться к психологу →</a>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">Пн–Пт</div>
+      <div class="hero-stat-lbl">Приём ведётся</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">100%</div>
+      <div class="hero-stat-lbl">Конфиденциально</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">0 ₸</div>
+      <div class="hero-stat-lbl">Бесплатно для AlmaU</div>
+    </div>
   </div>
 </section>
 
-<!-- PHOTO STRIP -->
-<div class="photo-strip">
-  <div class="photo-strip-left">
+<!-- LIBRARY STRIP -->
+<div class="alma-strip">
+  <div class="alma-strip-photo">
     <img src="/pics/library.jpg" alt="Библиотека AlmaU" loading="lazy">
   </div>
-  <div class="photo-strip-right">
-    <img src="/pics/students.webp" alt="Студенты AlmaU" loading="lazy">
+  <div class="alma-strip-text">
+    <h2 class="alma-h2">
+      Almaty<br>
+      Management<br>
+      <span class="green">University</span>
+    </h2>
+    <div class="alma-meta">г. Алматы &nbsp;·&nbsp; с 1988 года</div>
   </div>
 </div>
 
 <!-- WHY -->
-<section class="why-section section">
-  <div class="section-inner">
-    <div class="section-label">Почему обращаются к нам</div>
-    <h2 class="section-title">Психологическая служба<br>для студентов AlmaU</h2>
-    <div class="why-grid">
-      <div class="why-item">
-        <div class="why-num">01</div>
-        <div class="why-title">Полная конфиденциальность</div>
-        <div class="why-desc">Всё, что вы обсуждаете с психологом, остаётся между вами. Информация не передаётся деканату, кураторам или родителям.</div>
-      </div>
-      <div class="why-item">
-        <div class="why-num">02</div>
-        <div class="why-title">Бесплатно для всех</div>
-        <div class="why-desc">Психологическая помощь доступна каждому студенту и сотруднику университета. Никаких скрытых платежей или условий.</div>
-      </div>
-      <div class="why-item">
-        <div class="why-num">03</div>
-        <div class="why-title">Без ожидания в очереди</div>
-        <div class="why-desc">Запись онлайн в несколько кликов. Выберите удобное время — утром, днём или после занятий — без телефонных звонков.</div>
-      </div>
+<section class="why">
+  <div class="sec-label">ПОЧЕМУ ОБРАЩАЮТСЯ К НАМ</div>
+  <div class="sec-rule"></div>
+  <h2 class="sec-h2">Психологическая служба<br>для студентов AlmaU</h2>
+  <div class="why-cols">
+    <div class="why-col">
+      <div class="why-num">01</div>
+      <div class="why-title">Полная конфиденциальность</div>
+      <div class="why-desc">Всё, что вы обсуждаете с психологом, остаётся между вами. Информация не передаётся деканату, кураторам или родителям.</div>
+    </div>
+    <div class="why-col">
+      <div class="why-num">02</div>
+      <div class="why-title">Бесплатно для всех</div>
+      <div class="why-desc">Психологическая помощь доступна каждому студенту и сотруднику университета. Никаких скрытых платежей или условий.</div>
+    </div>
+    <div class="why-col">
+      <div class="why-num">03</div>
+      <div class="why-title">Без ожидания в очереди</div>
+      <div class="why-desc">Запись онлайн в несколько кликов. Выберите удобное время — без телефонных звонков и очередей.</div>
     </div>
   </div>
 </section>
 
 <!-- HOW IT WORKS -->
-<section class="how-section section" id="how">
-  <div class="section-inner">
-    <div class="section-label">Как получить помощь</div>
-    <h2 class="section-title">Просто и быстро</h2>
-    <div class="how-cols">
-      <div class="how-image">
-        <img src="/pics/library.jpg" alt="Библиотека AlmaU" loading="lazy">
+<section class="how" id="how">
+  <div class="sec-label">КАК ПОЛУЧИТЬ ПОМОЩЬ</div>
+  <div class="sec-rule"></div>
+  <h2 class="sec-h2">Просто и быстро</h2>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="how-step-top">
+        <div class="how-circle">1</div>
       </div>
-      <div class="how-steps">
-        <div class="how-step">
-          <div class="how-step-num">1</div>
-          <div class="how-step-body">
-            <h3>Создайте аккаунт</h3>
-            <p>Зарегистрируйтесь с любым вашим email-адресом — это займёт меньше минуты.</p>
-          </div>
-        </div>
-        <div class="how-step">
-          <div class="how-step-num">2</div>
-          <div class="how-step-body">
-            <h3>Выберите время</h3>
-            <p>Посмотрите расписание и запишитесь на удобный день и время. Психолог подтвердит запись.</p>
-          </div>
-        </div>
-        <div class="how-step">
-          <div class="how-step-num">3</div>
-          <div class="how-step-body">
-            <h3>Приходите на сессию</h3>
-            <p>После подтверждения вам откроется чат с психологом — можно задать вопросы заранее.</p>
-          </div>
-        </div>
-        <div style="padding-top: 2rem;">
-          <a href="/register.html" class="btn-primary">Записаться сейчас →</a>
-        </div>
-      </div>
+      <div class="how-title">Создайте аккаунт</div>
+      <div class="how-rule"></div>
+      <div class="how-desc">Зарегистрируйтесь с вашим email. Займёт меньше минуты.</div>
     </div>
+    <div class="how-step">
+      <div class="how-step-top">
+        <div class="how-circle">2</div>
+      </div>
+      <div class="how-title">Выберите время</div>
+      <div class="how-rule"></div>
+      <div class="how-desc">Посмотрите расписание и запишитесь на удобный день.</div>
+    </div>
+    <div class="how-step">
+      <div class="how-step-top">
+        <div class="how-circle">3</div>
+      </div>
+      <div class="how-title">Приходите</div>
+      <div class="how-rule"></div>
+      <div class="how-desc">После подтверждения открывается защищённый чат с психологом.</div>
+    </div>
+  </div>
+  <div class="how-cta">
+    <a href="/register.html" class="btn-dark">Записаться к психологу →</a>
   </div>
 </section>
 
+<!-- STUDENTS BAND -->
+<div class="students-band">
+  <img src="/pics/students.webp" alt="Студенты AlmaU" loading="lazy">
+  <div class="students-caption">Для тех, кто учится в AlmaU.</div>
+</div>
+
 <!-- TESTIMONIALS -->
-<section class="testimonials-section" id="testimonials">
-  <div class="section-inner">
-    <div class="section-label">Отзывы студентов</div>
-    <h2 class="section-title">Что говорят о сервисе</h2>
-    <p class="section-sub">Студенты AlmaU делятся своим опытом обращения в психологическую службу.</p>
-    <div class="testi-grid">
-      <div class="testi-card">
-        <p class="testi-text">«Очень удобно — записался онлайн в 23:00, а на следующий день уже был на сессии. Психолог помогла разобраться с тревогой перед экзаменами.»</p>
-        <div class="testi-author">
-          <div class="testi-avatar">А</div>
-          <div>
-            <div class="testi-name">Асель М.</div>
-            <div class="testi-role">Студентка, 3 курс</div>
-          </div>
-        </div>
-      </div>
-      <div class="testi-card">
-        <p class="testi-text">«Боялся, что информация попадёт к куратору. Но всё строго конфиденциально. Смог говорить открыто — это важно.»</p>
-        <div class="testi-author">
-          <div class="testi-avatar">Д</div>
-          <div>
-            <div class="testi-name">Данияр К.</div>
-            <div class="testi-role">Студент, 2 курс</div>
-          </div>
-        </div>
-      </div>
-      <div class="testi-card">
-        <p class="testi-text">«Чат между встречами очень помогает. Можно написать, если стало тяжело — не ждать до следующей сессии.»</p>
-        <div class="testi-author">
-          <div class="testi-avatar">З</div>
-          <div>
-            <div class="testi-name">Зарина Т.</div>
-            <div class="testi-role">Студентка, 4 курс</div>
-          </div>
-        </div>
-      </div>
+<section class="testimonials" id="testimonials">
+  <div class="sec-label">ОТЗЫВЫ СТУДЕНТОВ</div>
+  <div class="sec-rule"></div>
+  <h2 class="sec-h2">Что говорят о сервисе</h2>
+  <div class="testi-grid">
+    <div class="testi-card">
+      <p class="testi-quote">«Записалась в 23:00, а на следующий день уже была на сессии. Психолог помогла разобраться с тревогой перед экзаменами.»</p>
+      <div class="testi-divider"></div>
+      <div class="testi-author">Асель М. &nbsp;·&nbsp; 3 курс</div>
+    </div>
+    <div class="testi-card">
+      <p class="testi-quote">«Всё строго конфиденциально. Смог говорить открыто — это очень важно, особенно в университетской среде.»</p>
+      <div class="testi-divider"></div>
+      <div class="testi-author">Данияр К. &nbsp;·&nbsp; 2 курс</div>
+    </div>
+    <div class="testi-card">
+      <p class="testi-quote">«Чат между встречами очень помогает. Можно написать, если стало тяжело — не ждать до следующей сессии.»</p>
+      <div class="testi-divider"></div>
+      <div class="testi-author">Зарина Т. &nbsp;·&nbsp; 4 курс</div>
     </div>
   </div>
 </section>
 
 <!-- CTA -->
-<section class="cta-section">
-  <div class="section-inner" style="max-width:680px">
-    <div class="section-label" style="text-align:center">Сделайте первый шаг</div>
-    <div class="cta-divider"></div>
-    <h2 class="section-title" style="text-align:center">Запишитесь к психологу сегодня</h2>
-    <p class="section-sub" style="text-align:center;margin:0 auto 2.5rem">Бесплатно, конфиденциально, онлайн. Для всех студентов и сотрудников Almaty Management University.</p>
-    <div style="text-align:center">
-      <a href="/register.html" class="btn-primary">Создать аккаунт →</a>
-      <p class="cta-note">Уже есть аккаунт? <a href="/login.html" style="color:var(--ink-2);text-decoration:underline">Войти</a></p>
-    </div>
-  </div>
+<section class="cta">
+  <div class="sec-label">СДЕЛАЙТЕ ПЕРВЫЙ ШАГ</div>
+  <div class="sec-rule"></div>
+  <h2 class="cta-h2">Запишитесь к психологу сегодня</h2>
+  <p class="cta-sub">Бесплатно, конфиденциально, онлайн.</p>
+  <a href="/register.html" class="btn-dark">Создать аккаунт →</a>
+  <p class="cta-note">Уже есть аккаунт? <a href="/login.html">Войти</a></p>
 </section>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-top">
     <div>
-      <div class="footer-brand-name">AlmauPsych</div>
-      <p class="footer-brand-desc">Психологическая служба Almaty Management University. Поддержка каждого студента и сотрудника.</p>
+      <div class="footer-brand">AlmauPsych</div>
+      <p class="footer-brand-sub">Психологическая служба Almaty Management University. Поддержка каждого студента и сотрудника.</p>
     </div>
-    <div class="footer-col">
+    <div class="f-col">
       <h4>Навигация</h4>
       <a href="#how">Как это работает</a>
       <a href="#testimonials">Отзывы</a>
       <a href="/login.html">Войти</a>
       <a href="/register.html">Регистрация</a>
     </div>
-    <div class="footer-col">
+    <div class="f-col">
       <h4>Контакты</h4>
-      <span>г. Алматы, ул. Розыбакиева 227</span>
+      <span>ул. Розыбакиева 227, Алматы</span>
       <span>psychology@almau.edu.kz</span>
       <span>Пн–Пт, 9:00–18:00</span>
     </div>
